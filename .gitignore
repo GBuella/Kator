@@ -5,3 +5,7 @@ cmake_install.cmake
 install_manifest.txt
 Makefile
 kator
+CTestTestfile.cmake
+DartConfiguration.tcl
+Testing
+config.h
