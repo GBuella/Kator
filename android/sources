@@ -1,0 +1,24 @@
+
+# list of C++ files, not maintained by cmake.
+# Included by the Android.mk makefiles.
+# Must be kept in sync with the list in CMakeLists.txt manually.
+
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/position.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/bitboard.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/move_list.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/game.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/strings.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/book/book.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/book/book_fen.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/str.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/tests.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/kator.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/platform_low_level.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/hash_table.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/eval.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/tests/fen.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/tests/move.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/tests/print_move.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/tests/parse_move.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/tests/move_counter.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/main.cc

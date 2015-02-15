@@ -1,0 +1,64 @@
+
+#ifndef KATOR_CONFIG_H
+#define KATOR_CONFIG_H
+
+#pragma GCC system_header
+
+#define CMAKE_VERSION "@CMAKE_VERSION@"
+#define CMAKE_CXX_COMPILER_ID "@CMAKE_CXX_COMPILER_ID@"
+#define CMAKE_CXX_COMPILER_VERSION "@CMAKE_CXX_COMPILER_VERSION@"
+#cmakedefine CMAKE_COMPILER_IS_GNUCXX
+#define CMAKE_CXX_FLAGS "@CMAKE_CXX_FLAGS@"
+#define CMAKE_CXX_FLAGS_RELEASE "@CMAKE_CXX_FLAGS_RELEASE@"
+#define CMAKE_CXX_FLAGS_DEBUG "@CMAKE_CXX_FLAGS_DEBUG@"
+#define CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+
+#cmakedefine HAS_RESTRICT_KEYWORD
+#cmakedefine HAS__RESTRICT__KEYWORD
+#cmakedefine USE_ALIGNAS_64
+#cmakedefine USE_BOARD_VECTOR_64
+#cmakedefine USE_PIECE_MAP_VECTOR
+#cmakedefine USE_PEXT_BITBOARD
+#cmakedefine CAN_DO_SETVBUF
+
+#cmakedefine DEF_LL_64_MACROS
+
+/* GCC style extensions in GCC, clang, ICC */
+#cmakedefine HAS_GCC_BUILTIN_BSWAP64
+#cmakedefine HAS_GCC_BUILTIN_POPCNTLL_UINT64
+#cmakedefine HAS_GCC_BUILTIN_POPCNTL_UINT64
+#cmakedefine HAS_GCC_BUILTIN_POPCNT_UINT64
+#cmakedefine HAS_GCC_BUILTIN_CTZLL_UINT64
+#cmakedefine HAS_GCC_BUILTIN_CTZL_UINT64
+#cmakedefine HAS_GCC_BUILTIN_CTZ_UINT64
+#cmakedefine HAS_GCC_BMI_INTRINSICS
+#cmakedefine HAS_GCC_VECTOR
+#cmakedefine HAS_GCC_BUILTIN_UNREACHABLE
+#cmakedefine HAS_GCC_BUILTIN_EXPECT
+#cmakedefine HAS_GCC_BUILTIN_PREFETCH
+#cmakedefine HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM
+#cmakedefine HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM
+#cmakedefine HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM
+
+/* MS Visual C++ extensions */
+#cmakedefine HAS_MSVCPP_BYTESWAP_UINT64
+#cmakedefine HAS_MSVCPP_ASSUME
+#cmakedefine HAS_MSVCPP_POPCOUNT_64
+#cmakedefine HAS_MSVCPP_BITSCANFORWARD64
+
+/* intrinsics from x86intrin.h */
+#cmakedefine HAS_INTEL_128BIT_BUILTINS
+#cmakedefine HAS_INTEL_256BIT_BUILTINS
+#cmakedefine HAS_INTEL_512BIT_BUILTINS
+#cmakedefine HAS_BMI2_PEXT_BITBOARD_SUPPORT
+
+namespace kator
+{
+
+constexpr unsigned kator_version_major = @KATOR_VERSION_MAJOR@ ;
+constexpr unsigned kator_version_minor = @KATOR_VERSION_MINOR@ ;
+
+} /* namespace kator */
+
+#endif /* !define(KATOR_CONFIG_H) */
+
