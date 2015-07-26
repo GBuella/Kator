@@ -531,6 +531,21 @@ move_list::move_list(const position& position, player whites_view) noexcept:
   }
 }
 
+move move_list::first() const noexcept
+{
+  return moves[0];
+}
+
+bool move_list::contains(move move) const noexcept
+{
+  for (auto item : *this) {
+    if (item == move) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } /* namespace kator::chess */
 } /* namespace kator */
 

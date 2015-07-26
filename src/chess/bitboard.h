@@ -152,7 +152,7 @@ public:
   constexpr bitboard operator & (const bitboard&) const;
   constexpr bitboard operator | (const bitboard&) const;
   constexpr bitboard operator ^ (const bitboard&) const;
-  constexpr bitboard operator ~ () const;
+  constexpr bitboard operator compl  () const;
   bitboard operator ^= (const bitboard&);
   bitboard operator &= (const bitboard&);
   bitboard operator |= (const bitboard&);
@@ -317,12 +317,12 @@ constexpr bitboard bitboard::right_of(bitboard arg)
 
 constexpr bitboard bitboard::pawn_attacks_left(bitboard pawns)
 {
-  return left_of(north_of(pawns) & ~bitboard(file_a));
+  return left_of(north_of(pawns) & compl bitboard(file_a));
 }
 
 constexpr bitboard bitboard::pawn_attacks_right(bitboard pawns)
 {
-  return right_of(north_of(pawns) & ~bitboard(file_h));
+  return right_of(north_of(pawns) & compl bitboard(file_h));
 }
 
 constexpr bitboard bitboard::pawn_attacks(bitboard pawns)
@@ -332,8 +332,8 @@ constexpr bitboard bitboard::pawn_attacks(bitboard pawns)
 
 constexpr bitboard bitboard::opponent_pawn_attacks(bitboard pawns)
 {
-  return right_of(south_of(pawns) & ~bitboard(file_h)) |
-          left_of(south_of(pawns) & ~bitboard(file_a));
+  return right_of(south_of(pawns) & compl bitboard(file_h)) |
+          left_of(south_of(pawns) & compl bitboard(file_a));
 }
 
 constexpr bitboard::bitboard(sq_index index):
@@ -378,9 +378,9 @@ constexpr bitboard bitboard::operator ^ (const bitboard& other) const
   return bitboard(value ^ other.value);
 }
 
-constexpr bitboard bitboard::operator ~ () const
+constexpr bitboard bitboard::operator compl  () const
 {
-  return bitboard(~value);
+  return bitboard(compl value);
 }
 
 inline bitboard bitboard::operator ^= (const bitboard& other)
@@ -479,13 +479,13 @@ inline bool bitboard::is_bit_non_set(sq_index index) const
 inline void bitboard::reset_bit(sq_index index)
 {
   ASSUME(index.is_valid());
-  value &= ~bit(index);
+  value &= compl bit(index);
 }
 
 inline void bitboard::reset_bit_mem(bitboard* board, sq_index index)
 {
   ASSUME(index.is_valid());
-  board->value &= ~bit(index);
+  board->value &= compl bit(index);
 }
 
 inline void bitboard::set_bit(sq_index index)
@@ -623,9 +623,20 @@ constexpr bitboard edges =
     bitboard(file_a) | bitboard(file_h) |
     bitboard(rank_1) | bitboard(rank_8);
 
+/*
+    pre C++14 without binary literals, or digit separators
+
 constexpr bitboard center(UINT64_C(0x0000001818000000));
 constexpr bitboard black_squares(UINT64_C(0xaa55aa55aa55aa55));
 constexpr bitboard white_squares(UINT64_C(0x55aa55aa55aa55aa));
+*/
+
+constexpr bitboard center(UINT64_C(
+  0b00000000'00000000'00000000'00011000'00011000'00000000'00000000'00000000));
+constexpr bitboard black_squares(UINT64_C(
+  0b10101010'10101010'10101010'10101010'10101010'10101010'10101010'10101010));
+constexpr bitboard white_squares(UINT64_C(
+  0b01010101'01010101'01010101'01010101'01010101'01010101'01010101'01010101));
 
 inline constexpr bool is_empty(bitboard arg)
 {
@@ -654,7 +665,7 @@ inline bool is_empty_or_singular(bitboard arg)
 
 inline constexpr bitboard complement_of(bitboard arg)
 {
-  return ~arg;
+  return compl arg;
 }
 
 inline constexpr bitboard intersection_of(bitboard arg)

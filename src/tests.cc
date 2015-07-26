@@ -1,7 +1,7 @@
 
 #include "tests.h"
 #include "chess/position.h"
-#include "chess/game.h"
+#include "chess/game_state.h"
 
 namespace kator
 {
@@ -53,13 +53,13 @@ unsigned long slow_perft(const chess::position& position, unsigned depth)
 unsigned long perft(const chess::game_state& state, unsigned depth)
 {
   initialize_permanent_vectors();
-  return compute_perft<perft_type::simple>(state.position, depth);
+  return compute_perft<perft_type::simple>(*state.position, depth);
 }
 
 unsigned long slow_perft(const chess::game_state& state, unsigned depth)
 {
   initialize_permanent_vectors();
-  return compute_perft<perft_type::with_make_move>(state.position, depth);
+  return compute_perft<perft_type::with_make_move>(*state.position, depth);
 }
 
 } /* namespace kator */

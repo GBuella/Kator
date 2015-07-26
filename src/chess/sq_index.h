@@ -26,6 +26,11 @@ public:
     return sq_index(0x80);
   }
 
+  static constexpr sq_index null()
+  {
+    return sq_index(0);
+  }
+
   std::string to_str(player point_of_view = player::to_move) const;
   sq_index(const std::string& str);
 
@@ -143,7 +148,7 @@ public:
 
   constexpr bool is_set() const
   {
-    return value & 0x3f;
+    return value <= 0x3f;
   }
 
   class direction {

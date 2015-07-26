@@ -1,27 +1,17 @@
 
-#include "tests.h"
-#include "chess/game.h"
+#include "gtest/gtest.h"
 #include "chess/move.h"
+#include "chess/game_state.h"
 
-static const char test_filename[] = "tests/parse_move.cc";
+using namespace ::kator::chess;
 
-namespace kator
-{
-
-namespace chess {
-
-inline std::ostream& operator<< (std::ostream& stream, const move& move)
+std::ostream& operator<< (std::ostream& stream, move)
 {
   return stream << move.from << move.to;
 }
 
-}
-
-
-[[noreturn]] void test_parse_move()
+TEST(parse_move, chess::game_state)
 {
-  using namespace ::kator::chess;
-
   std::unique_ptr<game_state> state = parse_fen(starting_fen);
 
   ASSERT_THROW(state->parse_move("klmkmm"), invalid_move_string);
@@ -56,8 +46,5 @@ inline std::ostream& operator<< (std::ostream& stream, const move& move)
   ASSERT_EQ(castle_queenside, state->parse_move("o-O-O"));
   ASSERT_EQ(castle_kingside, state->parse_move("e1g1"));
   ASSERT_EQ(castle_queenside, state->parse_move("e1c1"));
-
-  exit(EXIT_SUCCESS);
 }
 
-}

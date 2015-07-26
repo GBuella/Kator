@@ -7,7 +7,7 @@
 namespace kator
 {
 
-namespace chess { class game_state; }
+namespace chess { struct game_state; }
 
 namespace str
 {

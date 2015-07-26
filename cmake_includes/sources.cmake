@@ -1,29 +1,26 @@
 
 
 SET(SOURCES 
-     src/chess/position.cc 
-     src/chess/bitboard.cc 
-     src/chess/move_list.cc 
-     src/chess/game.cc 
+     src/chess/position.cc
+     src/chess/bitboard.cc
+     src/chess/move_list.cc
+     src/chess/game_state.cc
+     src/chess/game.cc
      src/chess/strings.cc
+     src/chess/zobrist_hash.cc
 
-     src/book/book.cc 
-     src/book/book_fen.cc 
+     src/book/book.cc
+     src/book/book_fen.cc
 
-     src/str.cc 
-     src/tests.cc 
+     src/str.cc
+     src/tests.cc
      src/kator.cc
      src/platform_low_level.cc
 
-     src/engine/hash_table.cc
+     src/engine/zhash_table.cc
+     src/engine/engine.cc
      src/engine/eval.cc
+     src/engine/search.cc
 
-     tests/fen.cc
-     tests/move.cc
-     tests/print_move.cc
-     tests/parse_move.cc
-     tests/move_counter.cc
-
-     src/main.cc
      )
 

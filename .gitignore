@@ -9,3 +9,6 @@ CTestTestfile.cmake
 DartConfiguration.tcl
 Testing
 config.h
+kator_gtest
+libkator_lib.a
+.*.swp

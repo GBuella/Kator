@@ -6,6 +6,7 @@
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/position.cc 
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/bitboard.cc 
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/move_list.cc 
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/game_state.cc 
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/game.cc 
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/chess/strings.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/book/book.cc 
@@ -14,7 +15,8 @@ LOCAL_SRC_FILES += $(ROOT_PATH)/src/str.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/tests.cc 
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/kator.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/platform_low_level.cc
-LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/hash_table.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/zhash_table.cc
+LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/engine.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/src/engine/eval.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/tests/fen.cc
 LOCAL_SRC_FILES += $(ROOT_PATH)/tests/move.cc

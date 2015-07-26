@@ -16,21 +16,23 @@ option(USE_PEXT_BITBOARD
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceRuns)
 
-# Even after setting CXX_STANDARD to 11, cmake still doesn't
-# compile the feature tests with the c++11 flag
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
+# Even after setting CXX_STANDARD to 14, cmake still doesn't
+# compile the feature tests with the c++14 flag
 #
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-CHECK_CXX_COMPILER_FLAG("/Qstd=c++0x" COMPILER_SUPPORTS_CXXQ0X)
-CHECK_CXX_COMPILER_FLAG("/Qstd=c++11" COMPILER_SUPPORTS_CXXQ11)
-if(COMPILER_SUPPORTS_CXX11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-elseif(COMPILER_SUPPORTS_CXXQ0X)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qstd=c++0x")
-elseif(COMPILER_SUPPORTS_CXXQ11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qstd=c++11")
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+CHECK_CXX_COMPILER_FLAG("-std=c++0y" COMPILER_SUPPORTS_CXX0X)
+CHECK_CXX_COMPILER_FLAG("/Qstd=c++0y" COMPILER_SUPPORTS_CXXQ0X)
+CHECK_CXX_COMPILER_FLAG("/Qstd=c++14" COMPILER_SUPPORTS_CXXQ14)
+if(COMPILER_SUPPORTS_CXX14)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+elseif(COMPILER_SUPPORTS_CXX0Y)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0y")
+elseif(COMPILER_SUPPORTS_CXXQ0Y)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qstd=c++0y")
+elseif(COMPILER_SUPPORTS_CXXQ14)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qstd=c++14")
 endif()
 
 CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCHNATIVE)
@@ -138,9 +140,11 @@ endif()
 
 configure_file(cmake_config.h.in config.h)
 
-include_directories(src tests "${PROJECT_BINARY_DIR}")
+include_directories(src "${PROJECT_BINARY_DIR}")
 
-ADD_EXECUTABLE(kator ${SOURCES})
+ADD_LIBRARY(kator_lib ${SOURCES})
+ADD_EXECUTABLE(kator src/main.cc)
+TARGET_LINK_LIBRARIES(kator kator_lib)
 
 include(cmake_includes/tests.cmake)
 

@@ -1,6 +1,6 @@
 
 #include "book_fen.h"
-#include "chess/game.h"
+#include "chess/game_state.h"
 #include "chess/move.h"
 
 #include <istream>
@@ -82,7 +82,7 @@ book_fen::book_fen(const std::vector<std::string>& lines)
 std::vector<chess::move> book_fen::get_moves(const chess::game_state& state)
 {
   std::vector<chess::move> moves = data.at(state.to_FEN());
-  if (state.can_flip()) {
+  if (state.can_flip) {
     for (auto move : data.at(state.flipped_to_FEN())) {
       moves.push_back(move.flipped());
     }

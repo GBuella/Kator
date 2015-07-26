@@ -3,11 +3,18 @@ include(CTest)
 
 enable_testing()
 
-add_test("FEN" kator --test_fen)
-add_test("move" kator --test_move)
-add_test("print_move" kator --test_print_move)
-add_test("parse_move" kator --test_parse_move)
-add_test("move_counters" kator --test_move_counters)
+SET(TEST_SOURCES_BASIC
+  tests/move.cc
+  tests/game_state.cc
+  tests/game.cc
+)
+
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(kator_gtest tests/main.cc ${TEST_SOURCES_BASIC})
+target_link_libraries(kator_gtest ${GTEST_BOTH_LIBRARIES} kator_lib)
+
+GTEST_ADD_TESTS(kator_gtest "" ${TEST_SOURCES_BASIC})
 
 add_test("move_generator_perftsuite_starting_position"
          kator --test_file ${CMAKE_SOURCE_DIR}/tests/perftsuite/perft_000 )

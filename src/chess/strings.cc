@@ -53,7 +53,7 @@ const char* invalid_move_string::what() const noexcept
 }
 
 
-std::ostream& operator<< (std::ostream& stream, const player player)
+std::ostream& operator<< (std::ostream& stream, player player)
 {
   switch (player) {
     case kator::chess::player::to_move:
@@ -64,7 +64,7 @@ std::ostream& operator<< (std::ostream& stream, const player player)
   return stream << "[invalid enum]";
 }
 
-std::ostream& operator<< (std::ostream& stream, const real_player player)
+std::ostream& operator<< (std::ostream& stream, real_player player)
 {
   switch (player) {
     case white:
@@ -233,12 +233,12 @@ string piece::to_str(chess::player point_of_view, bool use_figurines) const
   }
 }
 
-std::ostream& operator<< (std::ostream& stream, const piece& piece)
+std::ostream& operator<< (std::ostream& stream, piece piece)
 {
   return stream << piece.to_str(player::to_move);
 }
 
-std::string sq_index::to_str(kator::chess::player point_of_view) const
+string sq_index::to_str(kator::chess::player point_of_view) const
 {
   return this->file().to_str() + this->rank().to_str(point_of_view);
 }
@@ -247,7 +247,7 @@ sq_index::sq_index(const std::string& str):
   sq_index(chess::rank(str.at(1)), chess::file(str.at(0)))
 {}
 
-std::ostream& operator<< (std::ostream& stream, const sq_index& index)
+std::ostream& operator<< (std::ostream& stream, sq_index index)
 {
   return stream << index.to_str(player::to_move);
 }
@@ -280,17 +280,22 @@ std::string castle_rights::generate_castle_FEN(real_player point_of_view) const
 
   std::string result;
 
-  if (can_castle_queenside()) {
-    result.push_back('Q');
-  }
+  /*{{{ "Those letters which appear will be ordered first uppercase
+        before lowercase and second kingside before queenside.
+        There is no white space between the letters."
+  }}}*/
+
   if (can_castle_kingside()) {
     result.push_back('K');
   }
-  if (opponent_can_castle_queenside()) {
-    result.push_back('q');
+  if (can_castle_queenside()) {
+    result.push_back('Q');
   }
   if (opponent_can_castle_kingside()) {
     result.push_back('k');
+  }
+  if (opponent_can_castle_queenside()) {
+    result.push_back('q');
   }
   if (result.size() == 0) {
     result.push_back('-');
@@ -324,7 +329,6 @@ void cleanup_move_string(string& str)
     }
   }
 }
-
 
 } /* namespace kator::chess */
 } /* namespace kator */

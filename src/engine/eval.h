@@ -50,6 +50,16 @@ public:
   {
   }
 
+  static constexpr position_value infinite_value()
+  {
+    return position_value(max);
+  }
+
+  static constexpr position_value null_value()
+  {
+    return position_value(0);
+  }
+
   static constexpr position_value create_from_int(int value)
   {
     return position_value(value);
@@ -134,7 +144,7 @@ public:
     internal = -internal;
   }
 
-  constexpr position_value flipped() const
+  constexpr position_value operator- () const
   {
     return position_value(-internal);
   }
@@ -154,6 +164,9 @@ public:
   static void initialize_lookup_tables(std::istream&);
 
 }; // class position_value
+
+constexpr position_value positive_infinite = position_value::infinite_value();
+constexpr position_value negative_infinite = -position_value::infinite_value();
 
 } // namespace kator::engine
 } // namespace kator

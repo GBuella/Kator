@@ -12,6 +12,11 @@
 namespace kator
 {
 
+namespace engine
+{
+class node;
+}
+
 namespace chess
 {
 
@@ -85,6 +90,8 @@ struct move
   void flip();
 
   friend class move_list;
+
+  static constexpr move null();
 
 private:
 
@@ -230,8 +237,12 @@ constexpr short move::change_index(piece result_piece,
   return move(a1, a1, result_piece, captured_piece, type).change_index();
 }
 
-namespace
+constexpr move move::null()
 {
+  return move(sq_index::null(), sq_index::null(), nonpiece);
+}
+
+constexpr move null_move = move::null();
 
 constexpr move castle_queenside(e1, c1, king, move::castle_queenside);
 constexpr move castle_kingside(e1, g1, king, move::castle_kingside);
@@ -240,8 +251,6 @@ constexpr move white_castle_queenside(e1, c1, king, move::castle_queenside);
 constexpr move white_castle_kingside(e1, g1, king, move::castle_kingside);
 constexpr move black_castle_queenside(e8, c8, king, move::castle_queenside);
 constexpr move black_castle_kingside(e8, g8, king, move::castle_kingside);
-
-}
 
 } /* namespace kator::chess */
 } /* namespace kator */

@@ -15,7 +15,7 @@ namespace book
 class book_fen : public book
 {
 
-  std::unordered_map<std::string, std::vector<chess::move>> data;
+  std::unordered_map<std::string, std::vector<chess::move> > data;
 
 public:
   book_fen(std::string path);

@@ -1,6 +1,6 @@
 
 #include "str.h"
-#include "chess/game.h"
+#include "chess/game_state.h"
 
 #include <cctype>
 #include <cstring>

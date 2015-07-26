@@ -13,8 +13,8 @@
 #include "chess/game.h"
 #include "tests.h"
 #include "engine/eval.h"
-
-#include "chess/z_random.inc"
+#include "engine/engine.h"
+#include "engine/search.h"
 
 #ifdef CAN_DO_SETVBUF
 #include <cstdio>
@@ -42,31 +42,37 @@ static void onexit();
 [[noreturn]] static void usage(int status);
 static void process_args(char **arg);
 static unique_ptr<kator::book::book> open_initial_book();
+static kator::conf conf;
 
-#ifndef KATOR_BUILD_WITHOUT_TESTS
 static void setup_testing(char**&);
 static bool is_testing_mode = false;
-static string* test_path = nullptr;
-[[noreturn]] static void test_run(unique_ptr<kator::book::book>&);
-#endif
+static string test_path;
+static int test_run(unique_ptr<kator::book::book>,
+                    unique_ptr<kator::engine::engine>,
+                    unique_ptr<kator::chess::game>);
 
 int main(int, char **argv)
 {
-  using namespace kator::conf;
-
-  unique_ptr<kator::book::book> initial_book(nullptr);
+  using ::std::move;
 
   startup();
   process_args(argv);
-  initial_book = open_initial_book();
+  auto initial_book = open_initial_book();
+  auto game = kator::chess::game::create();
+  auto engine =
+    kator::engine::engine::create(kator::engine::search_factory::create());
 
   if (is_testing_mode) {
-    test_run(initial_book);
+    return test_run(move(initial_book), move(engine), move(game));
   }
   else {
-    kator::command_loop(initial_book, std::cin, std::cout, std::cerr);
+    auto app = kator::kator::create(move(initial_book),
+                                    move(engine), move(game),
+                                    conf, std::cout, std::cerr);
+    app->command_loop(std::cin);
+
+    return EXIT_SUCCESS;
   }
-  return 0;
 }
 
 static void startup()
@@ -85,8 +91,8 @@ static void startup()
     exit(EXIT_FAILURE);
   }
 
-  kator::chess::bitboard_lookup_tables_init();
-  kator::engine::position_value::default_initialize_lookup_tables();
+  ::kator::chess::bitboard_lookup_tables_init();
+  ::kator::engine::position_value::default_initialize_lookup_tables();
 }
 
 static void onexit()
@@ -116,12 +122,12 @@ static void setup_book(char**& arg, kator::book::book_type type)
 {
   using namespace kator::book;
 
-  if (arg[1] == nullptr or kator::conf::book_type != book_type::builtin) {
+  if (arg[1] == nullptr or conf.book_type != book_type::builtin) {
     usage(EXIT_FAILURE);
   }
-  kator::conf::book_type = type;
+  conf.book_type = type;
   ++arg;
-  kator::conf::book_path = *arg;
+  conf.book_path = std::string(*arg);
 }
 
 static void setup_polyglot_book(char**& arg)
@@ -138,10 +144,10 @@ static void setup_nobook()
 {
   using namespace kator::book;
 
-  if (kator::conf::book_type != book_type::builtin) {
+  if (conf.book_type != book_type::builtin) {
     usage(EXIT_FAILURE);
   }
-  kator::conf::book_type = book_type::empty;
+  conf.book_type = book_type::empty;
 }
 
 static void print_version_banner()
@@ -239,30 +245,6 @@ static void print_version_verbose()
   exit(0);
 }
 
-static int process_test_args(char**& arg)
-{
-  (void)arg;
-
-# ifndef KATOR_BUILD_WITHOUT_TESTS
-
-    string sarg(*arg);
-
-    if      (sarg == "--test_file")          setup_testing(arg);
-    else if (sarg == "--test_fen")           kator::test_FEN();
-    else if (sarg == "--test_move")          kator::test_move();
-    else if (sarg == "--test_print_move")    kator::test_print_move();
-    else if (sarg == "--test_parse_move")    kator::test_parse_move();
-    else if (sarg == "--test_move_counters") kator::test_move_counters();
-    else return 1;
-
-    return 0;
-
-# else
-    return 1;
-# endif
-
-}
-
 static void process_args(char **arg)
 {
   progname = *arg;
@@ -275,15 +257,12 @@ static void process_args(char **arg)
     else if (sarg == "--book")               setup_polyglot_book(arg);
     else if (sarg == "--fenbook")            setup_fen_book(arg);
     else if (sarg == "--nobook")             setup_nobook();
-    else if (sarg == "--unicode")            kator::conf::use_unicode = true;
+    else if (sarg == "--unicode")            conf.use_unicode = true;
     else if (sarg == "--help")               usage(EXIT_SUCCESS);
     else if (sarg == "-help")                usage(EXIT_SUCCESS);
     else if (sarg == "--h")                  usage(EXIT_SUCCESS);
     else if (sarg == "-h")                   usage(EXIT_SUCCESS);
-    else if (process_test_args(arg) != 0)    usage(EXIT_FAILURE);
-  }
-  if (kator::conf::book_path == nullptr) {
-    kator::conf::book_path = new char[1];
+    else if (sarg == "--test_file")          setup_testing(arg);
   }
 }
 
@@ -299,19 +278,17 @@ static unique_ptr<kator::book::book> open_initial_book()
 {
   using kator::book::book;
 
-  unique_ptr<book> initial_book(nullptr);
+  unique_ptr<book> initial_book;
 
   try {
-    initial_book = book::open(kator::conf::book_type, kator::conf::book_path);
+    initial_book = book::open(conf.book_type, conf.book_path);
   }
   catch (...) {
-    std::cerr << "Unable to open book " << kator::conf::book_path << "\n";
+    std::cerr << "Unable to open book " << conf.book_path << "\n";
     exit(EXIT_FAILURE);
   }
   return initial_book;
 }
-
-#ifndef KATOR_BUILD_WITHOUT_TESTS
 
 static void setup_testing(char**& arg)
 {
@@ -321,7 +298,7 @@ static void setup_testing(char**& arg)
   if (*arg == nullptr) {
     usage(EXIT_FAILURE);
   }
-  test_path = new string(*arg);
+  test_path = string(*arg);
 }
 
 static void compare_streams(std::istream& expected, std::istream& actual)
@@ -357,43 +334,49 @@ static void on_test_run_exit()
   }
 }
 
-[[noreturn]] static void test_run(unique_ptr<kator::book::book>& initial_book)
+static int test_run(unique_ptr<kator::book::book> initial_book,
+                    unique_ptr<kator::engine::engine> engine,
+                    unique_ptr<kator::chess::game> game)
 {
   std::ifstream input;
   std::ifstream expected_out;
   std::ifstream expected_err;
   std::stringstream mock_out;
   std::stringstream mock_err;
+  unique_ptr<kator::kator> app;
 
   if (atexit(on_test_run_exit) != 0) {
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
   try {
-    input.open(*test_path + ".in");
+    input.open(test_path + ".in");
   }
   catch (...) {
-    std::cerr << "Unable to open " << *test_path << ".in\n";
-    exit(EXIT_FAILURE);
+    std::cerr << "Unable to open " << test_path << ".in\n";
+    return EXIT_FAILURE;
   }
   try {
-    expected_out.open(*test_path + ".out");
+    expected_out.open(test_path + ".out");
   }
   catch (...) {
-    std::cerr << "Unable to open " << *test_path << ".out\n";
-    exit(EXIT_FAILURE);
+    std::cerr << "Unable to open " << test_path << ".out\n";
+    return EXIT_FAILURE;
   }
   try {
-    expected_err.open(*test_path + ".err");
+    expected_err.open(test_path + ".err");
   }
   catch (...) {
   }
   test_is_running = true;
-  kator::command_loop(initial_book, input, mock_out, mock_err);
+
+  app = kator::kator::create(std::move(initial_book), std::move(engine),
+                             std::move(game), conf, mock_out, mock_err);
+  app->command_loop(input);
+  app.reset();
+
   test_is_running = false;
   compare_streams(expected_out, mock_out);
   compare_streams(expected_err, mock_err);
-  exit(0);
+  return EXIT_SUCCESS;
 }
-
-#endif // KATOR_BUILD_WITHOUT_TESTS
 

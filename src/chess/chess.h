@@ -21,9 +21,8 @@ class bitboard;
 class position;
 struct move;
 class move_list;
-class game_state;
+struct game_state;
 class game;
-class hash_table;
 
 enum class move_notation
 {
@@ -71,15 +70,15 @@ private:
 std::unique_ptr<game_state> parse_fen(std::string);
 std::unique_ptr<game_state> parse_fen(std::istream&);
 
-std::ostream& operator<< (std::ostream&, const player);
-std::ostream& operator<< (std::ostream&, const real_player);
+std::ostream& operator<< (std::ostream&, player);
+std::ostream& operator<< (std::ostream&, real_player);
 
 void bitboard_lookup_tables_init();
 
 void cleanup_move_string(std::string&);
 
-std::ostream& operator<< (std::ostream&, const sq_index&);
-std::ostream& operator<< (std::ostream&, const piece&);
+std::ostream& operator<< (std::ostream&, sq_index);
+std::ostream& operator<< (std::ostream&, piece);
 
 } /* namespace kator::chess */
 

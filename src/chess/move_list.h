@@ -6,6 +6,11 @@
 
 namespace kator
 {
+namespace engine
+{
+class node;
+}
+
 namespace chess
 {
 
@@ -44,6 +49,8 @@ public:
   size_t count() const noexcept;
   iterator begin() const noexcept;
   iterator end() const noexcept;
+  move first() const noexcept;
+  bool contains(move) const noexcept;
 
   friend position;
   friend game_state;
@@ -56,6 +63,8 @@ private:
 protected:
 
   move operator[] (size_t index) const noexcept;
+
+  friend engine::node;
 }; /* class move_list */
 
 } /* namespace kator::chess */
