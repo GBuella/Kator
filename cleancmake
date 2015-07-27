@@ -1,1 +1,3 @@
-rm -rf CMakeCache.txt CMakeFiles Makefile cmake_install.cmake CTestTestfile.cmake Testing config.h CMakeScripts DartConfiguration.tcl
+rm -rf CMakeCache.txt CMakeFiles Makefile cmake_install.cmake \
+  CTestTestfile.cmake Testing config.h CMakeScripts DartConfiguration.tcl \
+  tests/CMakeFiles tests/CTestTestfile.cmake
