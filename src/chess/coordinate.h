@@ -12,12 +12,12 @@ class coordinate
 {
 protected:
 
-  unsigned char value;
+  unsigned value;
   coordinate() {}
 
 public:
 
-  constexpr unsigned char offset() const
+  constexpr unsigned offset() const
   {
     return value;
   }
@@ -39,9 +39,9 @@ public:
 
 protected:
 
-  constexpr coordinate(int arg):
-    value(static_cast<unsigned char>(arg)) {}
-  constexpr coordinate(unsigned char arg): value(arg) {}
+  explicit constexpr coordinate(int arg):
+    value(static_cast<unsigned>(arg)) {}
+  explicit constexpr coordinate(unsigned arg): value(arg) {}
 
   template <int first, int last, int delta, typename T>
   class coordinate_range
@@ -68,7 +68,7 @@ protected:
 
       T operator* () const
       {
-        return T(value);
+        return T(unsigned(value));
       }
 
       const iterator& operator++ ()

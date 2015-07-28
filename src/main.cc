@@ -1,4 +1,18 @@
 
+#include "config.h"
+
+#ifdef CAN_DO_SETVBUF
+#  if defined(CYGWIN) && defined(__STRICT_ANSI__)
+#    undef __STRICT_ANSI__
+#    include <stdio.h>
+#    include <unistd.h>
+#    define __STRICT_ANSI__
+#  else
+#    include <cstdio>
+#    include <unistd.h>
+#  endif
+#endif
+
 #include <chrono>
 #include <cstdlib>
 #include <csignal>
@@ -15,11 +29,6 @@
 #include "engine/eval.h"
 #include "engine/engine.h"
 #include "engine/search.h"
-
-#ifdef CAN_DO_SETVBUF
-#include <cstdio>
-#include <unistd.h>
-#endif
 
 #ifdef ANDROID_NDK_PROFILING
 extern "C" void monstartup(const char *);

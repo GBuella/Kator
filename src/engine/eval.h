@@ -36,7 +36,7 @@ public:
 
 private:
 
-  constexpr position_value(int value): internal(value) {}
+  explicit constexpr position_value(int value): internal(value) {}
 
   static std::array<short, chess::piece::array_size> piece_values;
   static chess::move::change_array_t<short> move_change_table;
@@ -67,7 +67,7 @@ public:
 
   static constexpr position_value create_from_adjusted_uint(unsigned value)
   {
-    return static_cast<unsigned>(value - max);
+    return position_value(static_cast<int>(value) - max);
   }
 
   constexpr unsigned to_adjusted_uint() const noexcept
@@ -129,14 +129,16 @@ public:
     return *this;
   }
 
-  constexpr position_value operator+ (const chess::piece& piece) const
+  constexpr position_value operator+ (const chess::piece&) const
   {
-    return *this + piece;
+    //return position_value(internal - piece_values[piece.index()]);
+    return position_value(4);
   }
 
-  constexpr position_value operator- (const chess::piece& piece) const
+  constexpr position_value operator- (const chess::piece&) const
   {
-    return *this - piece;
+    return position_value(-4);
+    //return position_value(internal - piece_values[piece.index()]);
   }
 
   void flip()

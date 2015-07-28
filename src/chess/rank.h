@@ -14,7 +14,7 @@ namespace chess
 class rank: public coordinate<7>
 {
 
-  constexpr rank(int arg):
+  constexpr rank(unsigned arg):
     coordinate<7>(arg) {}
 
 public:
@@ -38,12 +38,12 @@ public:
 
   static constexpr rank back_rank()
   {
-    return rank(7);
+    return rank(unsigned(7));
   }
 
   static constexpr rank opponent_back_rank()
   {
-    return rank(0);
+    return rank(unsigned(0));
   }
 
   constexpr bool is_any_back_rank() const

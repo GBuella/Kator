@@ -17,7 +17,9 @@
 #ifndef KATOR_PLATFORM_LOW_LEVEL_H
 #define KATOR_PLATFORM_LOW_LEVEL_H
 
-#pragma GCC system_header
+#ifdef __GNUC__
+#  pragma GCC system_header
+#endif
 
 #include "platform.h"
 
@@ -301,7 +303,7 @@ public:
 #elif defined(HAS_GCC_BUILTIN_POPCNT_UINT64)
 #  define SYSTEM_POPCNT64 __builtin_popcount
 #elif defined(HAS_MSVCPP_POPCOUNT_64)
-#  define SYSTEM_POPCNT64 static_cast<int>__popcnt64
+#  define SYSTEM_POPCNT64(value) static_cast<int>(__popcnt64(value))
 #endif // popcnt builtins
 
 #ifdef HAS_GCC_BUILTIN_BSWAP64

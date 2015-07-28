@@ -51,7 +51,7 @@ struct move
   constexpr move flipped() const;
 
 
-  move_type_enum move_type:3;
+  unsigned move_type:3;
 
   /* The resulting piece on the to square,
      either the piece being moved, or the promotion. */
@@ -129,13 +129,13 @@ constexpr move::move(sq_index ctor_from,
                      sq_index ctor_to,
                      piece ctor_piece,
                      piece ctor_captured,
-                     move::move_type_enum ctor_move_type = move::general):
-    from(ctor_from),
-    to(ctor_to),
-    move_type(ctor_move_type),
-    result_piece(ctor_piece.index()),
-    captured_piece(ctor_captured)
-  {}
+                     move::move_type_enum ctor_move_type = move::general) :
+  from(ctor_from),
+  to(ctor_to),
+  move_type(ctor_move_type),
+  result_piece(ctor_piece.index()),
+  captured_piece(ctor_captured)
+{}
 
 inline void move::flip()
 {
@@ -146,7 +146,7 @@ inline void move::flip()
 constexpr move move::flipped() const
 {
   return move(from.flipped(), to.flipped(),
-              result(), captured_piece, move_type);
+              result(), captured_piece, move_type_enum(move_type));
 }
 
 inline move::move():

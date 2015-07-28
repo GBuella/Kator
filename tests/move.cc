@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include "gtest.h"
 #include "chess/move.h"
 
 using namespace ::kator::chess;

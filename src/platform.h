@@ -2,7 +2,9 @@
 #ifndef KATOR_PLATFORM_H
 #define KATOR_PLATFORM_H
 
-#pragma GCC system_header
+#ifdef __GNUC__
+#  pragma GCC system_header
+#endif
 
 #include "config.h"
 
@@ -153,8 +155,8 @@ static inline void platform_prefetch_for_write_3(const void*) { }
 
 #endif
 
-#if defined(HAS_MSVCPP_BYTESWAP_UINT64)
-    || defined(HAS_MSVCPP_POPCOUNT_64)
+#if defined(HAS_MSVCPP_BYTESWAP_UINT64) \
+    || defined(HAS_MSVCPP_POPCOUNT_64) \
     || defined(HAS_MSVCPP_BITSCANFORWARD64)
 #  include <intrin.h>
 #  define HAS_MSVCPP_INTRINSICS

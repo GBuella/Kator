@@ -4,6 +4,8 @@
 #include <regex>
 #include <map>
 #include <string>
+#include <cstdlib>
+#include <climits>
 
 #include "eval.h"
 #include "chess/position.h"
@@ -99,20 +101,19 @@ bool is_line_empty(const string& line)
   return (std::regex_match(line, regex));
 }
 
-short parse_decimal(const string& value)
+short parse_number(const string& value, int base)
 {
-  if (value.size() > 5) {
-    throw std::exception();
-  }
-  return short(std::stoi(value));
-}
+  char* pend;
+  long result;
 
-short parse_hexadecimal(const string& value)
-{
   if (value.size() > 5) {
-    throw std::exception();
+    throw;
   }
-  return short(std::stoi(value, 0, 16));
+  result = strtol(value.c_str(), &pend, base);
+  if (result < SHRT_MIN or result > SHRT_MAX or *pend != '\0') {
+    throw;
+  }
+  return short(result);
 }
 
 void get_key_value_strings(const string& line, string& key, short& value)
@@ -124,15 +125,15 @@ void get_key_value_strings(const string& line, string& key, short& value)
 
   std::regex_match(line, key_value, expr_decimal);
   if (key_value.size() == 3) {
-    value = parse_decimal(key_value[2]);
+    value = parse_number(key_value[2], 10);
   }
   else {
     std::regex_match(line, key_value, expr_hexadecimal);
     if (key_value.size() == 3) {
-      value = parse_hexadecimal(key_value[2]);
+      value = parse_number(key_value[2], 16);
     }
     else {
-      throw std::exception();
+      throw;
     }
   }
   key = key_value[1];

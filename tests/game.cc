@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include "gtest.h"
 #include "chess/move.h"
 #include "chess/game.h"
 #include "chess/game_state.h"

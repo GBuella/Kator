@@ -1,4 +1,5 @@
 
+#include <cctype>
 #include <string>
 
 #include "chess.h"
@@ -31,15 +32,13 @@ const char* invalid_king_positions::what() const noexcept
   return "Invalid poistion of kings";
 }
 
-invalid_move_string::invalid_move_string(const char* ctor_move_str):
-  move_error_string(nullptr)
+invalid_move_string::invalid_move_string(const char* ctor_move_str)
 {
-  static const char prefix[] = "Invalid move ";
-  char *str = new char[strlen(prefix) + strlen(ctor_move_str) + 1];
+  static const string prefix = "Invalid move ";
+  string move_str((ctor_move_str));
 
-  strcpy(str, prefix);
-  strcat(str, ctor_move_str);
-  move_error_string.reset(str);
+  move_error_string = prefix;
+  move_error_string += move_str;
 }
 
 invalid_move_string::invalid_move_string(const string& ctor_move_str):
@@ -49,7 +48,7 @@ invalid_move_string::invalid_move_string(const string& ctor_move_str):
 
 const char* invalid_move_string::what() const noexcept
 {
-  return move_error_string.get();
+  return move_error_string.c_str();
 }
 
 

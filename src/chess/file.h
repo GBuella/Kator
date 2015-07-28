@@ -13,7 +13,7 @@ namespace chess
 
 class file: public coordinate<7>
 {
-  constexpr file(int arg):
+  constexpr file(unsigned arg):
     coordinate<7>(arg) {}
 
 public:
@@ -27,12 +27,12 @@ public:
 
   static constexpr file leftmost()
   {
-    return file(7);
+    return file(unsigned(7));
   }
 
   static constexpr file rigthmost()
   {
-    return file(0);
+    return file(unsigned(0));
   }
 
   void shift_left()

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <sstream>
+#include <cstdlib>
 
 using ::std::unique_ptr;
 using ::std::make_unique;

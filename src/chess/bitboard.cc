@@ -6,9 +6,6 @@
 #include <vector>
 #include <stdexcept>
 
-using ::std::array;
-using ::std::vector;
-
 namespace kator
 {
 namespace chess
@@ -23,12 +20,12 @@ typedef std::remove_const< std::remove_reference<
 
 #include "magics.inc"
 
-static const array<sq_index::direction, 8> king_directions({
+static const std::array<sq_index::direction, 8> king_directions({
   {north, north + east, north + west, west,
   south, south + east, south + west, east}
 });
 
-static const array<sq_index::direction, 8> knigth_directions({
+static const std::array<sq_index::direction, 8> knigth_directions({
   {north + north + west,
   north + north + east,
   north + west + west,
@@ -46,7 +43,7 @@ struct sliding_direction
   bitboard attack_edge;
 };
 
-typedef array<sliding_direction, 4> sliding_directions;
+typedef std::array<sliding_direction, 4> sliding_directions;
 
 static const sliding_directions rook_directions = {{
   { east,  bitboard(file_h), bitboard(file_a) },
@@ -74,8 +71,8 @@ static const sliding_directions bishop_directions = {{
   }
 }};
 
-void generate_simple_table(array<bitboard, 64>& attack_patterns,
-                           const array<sq_index::direction, 8>& directions)
+void generate_simple_table(std::array<bitboard, 64>& attack_patterns,
+                           const std::array<sq_index::direction, 8>& directions)
 {
   attack_patterns.fill(bitboard::empty());
   for (auto index : sq_index::range()) {
@@ -114,7 +111,7 @@ bitboard generate_move_pattern(sq_index src_index,
          | generate_ray(src_index, occupied, directions[3]);
 }
 
-void generate_bishop_patterns(array<bitboard, 64>& attack_patterns)
+void generate_bishop_patterns(std::array<bitboard, 64>& attack_patterns)
 {
   for (auto index : sq_index::range()) {
     attack_patterns[index.offset()] =
@@ -122,7 +119,7 @@ void generate_bishop_patterns(array<bitboard, 64>& attack_patterns)
   }
 }
 
-void generate_rook_patterns(array<bitboard, 64>& attack_patterns)
+void generate_rook_patterns(std::array<bitboard, 64>& attack_patterns)
 {
   for (auto index : sq_index::range()) {
     attack_patterns[index.offset()] =
@@ -130,7 +127,7 @@ void generate_rook_patterns(array<bitboard, 64>& attack_patterns)
   }
 }
 
-void add_rays(array<bitboard, 64*64>& rays,
+void add_rays(std::array<bitboard, 64*64>& rays,
               sq_index source,
               sq_index::direction direction)
 {
@@ -146,7 +143,7 @@ void add_rays(array<bitboard, 64*64>& rays,
   }
 }
 
-void generate_ray_constants(array<bitboard, 64*64>& rays)
+void generate_ray_constants(std::array<bitboard, 64*64>& rays)
 {
   rays.fill(bitboard::empty());
   for (auto index : sq_index::range()) {
@@ -197,7 +194,7 @@ uint64_t generate_post_mask(sq_index source,
 #endif
 
 void generate_occupancies(sq_index source,
-                          vector<bitboard>& occupancies,
+                          std::vector<bitboard>& occupancies,
                           bitboard mask)
 {
   bitboard subset = bitboard::empty();
@@ -209,12 +206,12 @@ void generate_occupancies(sq_index source,
 }
 
 void generate_sliding_attacks(sq_index index,
-                              vector<sliding_attack_t>& sliding_attack_table,
+                              std::vector<sliding_attack_t>& sliding_attack_table,
                               const bitboard::magical& item,
-                              const vector<bitboard>& occupancies,
+                              const std::vector<bitboard>& occupancies,
                               const sliding_directions& directions)
 {
-  vector<sliding_attack_t> attacks;
+  std::vector<sliding_attack_t> attacks;
 
 #ifdef USE_PEXT_BITBOARD
   attacks.assign(occupancies.size(), 0);
@@ -242,15 +239,15 @@ void generate_sliding_attacks(sq_index index,
                     attacks.cbegin() + static_cast<ptrdiff_t>(max_offset) + 1);
 }
 
-void generate_magics(array<bitboard::magical, 64>& magics,
-                     const array<uint64_t, 64> multipliers,
+void generate_magics(std::array<bitboard::magical, 64>& magics,
+                     const std::array<uint64_t, 64> multipliers,
                      const sliding_directions& directions)
 {
-  array<size_t, 64> attack_offsets;
-  auto sliding_attack_table = new vector<sliding_attack_t>();
+  std::array<size_t, 64> attack_offsets;
+  auto sliding_attack_table = new std::vector<sliding_attack_t>();
 
   for (auto index : sq_index::range()) {
-    vector<bitboard> occupancies;
+    std::vector<bitboard> occupancies;
     bitboard::magical& item = magics[index.offset()];
 
     item.pre_mask = generate_pre_mask(index, directions);
@@ -275,14 +272,14 @@ void generate_magics(array<bitboard::magical, 64>& magics,
 
 }
 
-array<bitboard, 64> bitboard::knight_table {{}};
-array<bitboard, 64> bitboard::king_table {{}};
-array<bitboard, 64> bitboard::bishop_pattern_table {{}};
-array<bitboard, 64> bitboard::rook_pattern_table {{}};
-array<bitboard, 64 * 64> bitboard::rays {{}};
+std::array<bitboard, 64> bitboard::knight_table {{}};
+std::array<bitboard, 64> bitboard::king_table {{}};
+std::array<bitboard, 64> bitboard::bishop_pattern_table {{}};
+std::array<bitboard, 64> bitboard::rook_pattern_table {{}};
+std::array<bitboard, 64 * 64> bitboard::rays {{}};
 
-array<bitboard::magical, 64> bitboard::magical::rook {{}};
-array<bitboard::magical, 64> bitboard::magical::bishop {{}};
+std::array<bitboard::magical, 64> bitboard::magical::rook {{}};
+std::array<bitboard::magical, 64> bitboard::magical::bishop {{}};
 
 static bool lookup_tables_generated = false;
 

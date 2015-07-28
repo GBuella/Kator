@@ -1,5 +1,8 @@
 
 set(orig_cmake_required_flags "${CMAKE_REQUIRED_FLAGS}")
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${STANDARD_FLAG}")
+
+if(NOT MSVC)
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -55,6 +58,8 @@ int main() {
 }"
   HAS_GCC_BUILTIN_POPCNT_UINT64)
 
+endif()
+
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
 #include <intrin.h>
@@ -79,6 +84,7 @@ int main() {
 }"
   HAS_MSVCPP_BITSCANFORWARD64)
 
+if(NOT MSVC)
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -156,6 +162,8 @@ int main() {
 }"
     HAS_GCC_VECTOR)
 
+endif()
+
 option(USE_ALIGNAS_64
     "Use 64 byte alignment for the position representation" OFF)
 
@@ -177,6 +185,7 @@ return x & 0;
  
 
 CHECK_CXX_SOURCE_RUNS("
+#undef __STRICT_ANSI__
 #include <cstdio>
 #include <unistd.h>
 int main() {
@@ -186,6 +195,8 @@ if (isatty(fileno(stdin))) {
 return 0;
 }"
   CAN_DO_SETVBUF)
+
+if(NOT MSVC)
  
 CHECK_CXX_SOURCE_RUNS("
 int main() {
@@ -243,7 +254,8 @@ int main() {
 }"
   HAS_INTEL_256BIT_BUILTINS)
 
-set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags} -ffixed-xmm7")
+set(CMAKE_REQUIRED_FLAGS
+  "${orig_cmake_required_flags} ${STANDARD_FLAG} -ffixed-xmm7")
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -256,7 +268,8 @@ int main() {
 }"
   HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM)
 
-set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags} -ffixed-xmm15")
+set(CMAKE_REQUIRED_FLAGS
+  "${orig_cmake_required_flags} ${STANDARD_FLAG} -ffixed-xmm15")
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -269,7 +282,8 @@ int main() {
 }"
   HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM)
 
-set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags} -ffixed-xmm31")
+set(CMAKE_REQUIRED_FLAGS
+  "${orig_cmake_required_flags} ${STANDARD_FLAG} -ffixed-xmm31")
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -282,7 +296,9 @@ int main() {
 }"
   HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM)
 
-set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags}")
+endif()
+
+set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags} ${STANDARD_FLAG}")
 
 CHECK_CXX_SOURCE_RUNS("
 #include <cstdint>
@@ -305,3 +321,5 @@ int main () {
   return pext(x, 231) & 0;
 }"
     HAS_BMI2_PEXT_BITBOARD_SUPPORT)
+
+set(CMAKE_REQUIRED_FLAGS "${orig_cmake_required_flags}")

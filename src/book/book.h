@@ -1,6 +1,6 @@
 
-#ifndef BOOK_H
-#define BOOK_H
+#ifndef KATOR_BOOK_H
+#define KATOR_BOOK_H
 
 #include <string>
 #include <vector>

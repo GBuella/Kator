@@ -18,7 +18,11 @@ namespace chess
 
 class move_list;
 
-class alignas(64) position:
+class
+#ifdef USE_ALIGNAS_64
+alignas(64)
+#endif
+position:
   public castle_rights
 {
 
@@ -30,8 +34,8 @@ private:
 #ifdef USE_ALIGNAS_64
 
 public:
-  void* operator new(size_t);
-  void operator delete(void*);
+  static void* operator new(size_t);
+  static void operator delete(void*);
 
 private:
 

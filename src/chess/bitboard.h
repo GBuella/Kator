@@ -295,54 +295,6 @@ inline bitboard bitboard::rook_attacks(bitboard occupied, sq_index index)
   return magical::rook[index.offset()].pattern(occupied.value);
 }
 
-constexpr bitboard bitboard::north_of(bitboard arg)
-{
-  return bitboard(arg.value >> 8);
-}
-
-constexpr bitboard bitboard::south_of(bitboard arg)
-{
-  return bitboard(arg.value << 8);
-}
-
-constexpr bitboard bitboard::left_of(bitboard arg)
-{
-  return bitboard(arg.value << 1);
-}
-
-constexpr bitboard bitboard::right_of(bitboard arg)
-{
-  return bitboard(arg.value >> 1);
-}
-
-constexpr bitboard bitboard::pawn_attacks_left(bitboard pawns)
-{
-  return left_of(north_of(pawns) & compl bitboard(file_a));
-}
-
-constexpr bitboard bitboard::pawn_attacks_right(bitboard pawns)
-{
-  return right_of(north_of(pawns) & compl bitboard(file_h));
-}
-
-constexpr bitboard bitboard::pawn_attacks(bitboard pawns)
-{
-  return pawn_attacks_left(pawns) | pawn_attacks_right(pawns);
-}
-
-constexpr bitboard bitboard::opponent_pawn_attacks(bitboard pawns)
-{
-  return right_of(south_of(pawns) & compl bitboard(file_h)) |
-          left_of(south_of(pawns) & compl bitboard(file_a));
-}
-
-constexpr bitboard::bitboard(sq_index index):
-  value(bit(index)) {}
-
-template<typename... indices>
-constexpr bitboard::bitboard(sq_index index, indices... others):
-  value(bit(index) | bitboard(others...).value) {}
-
 constexpr bool bitboard::is_empty() const
 {
   return value == UINT64_C(0);
@@ -398,6 +350,53 @@ inline bitboard bitboard::operator |= (const bitboard& other)
   return bitboard(value |= other.value);
 }
 
+constexpr bitboard bitboard::north_of(bitboard arg)
+{
+  return bitboard(arg.value >> 8);
+}
+
+constexpr bitboard bitboard::south_of(bitboard arg)
+{
+  return bitboard(arg.value << 8);
+}
+
+constexpr bitboard bitboard::left_of(bitboard arg)
+{
+  return bitboard(arg.value << 1);
+}
+
+constexpr bitboard bitboard::right_of(bitboard arg)
+{
+  return bitboard(arg.value >> 1);
+}
+
+constexpr bitboard bitboard::pawn_attacks_left(bitboard pawns)
+{
+  return left_of(north_of(pawns) & compl bitboard(file_a));
+}
+
+constexpr bitboard bitboard::pawn_attacks_right(bitboard pawns)
+{
+  return right_of(north_of(pawns) & compl bitboard(file_h));
+}
+
+constexpr bitboard bitboard::pawn_attacks(bitboard pawns)
+{
+  return pawn_attacks_left(pawns) | pawn_attacks_right(pawns);
+}
+
+constexpr bitboard bitboard::opponent_pawn_attacks(bitboard pawns)
+{
+  return right_of(south_of(pawns) & compl bitboard(file_h)) |
+          left_of(south_of(pawns) & compl bitboard(file_a));
+}
+
+constexpr bitboard::bitboard(sq_index index):
+  value(bit(index)) {}
+
+template<typename... indices>
+constexpr bitboard::bitboard(sq_index index, indices... others):
+  value(bit(index) | bitboard(others...).value) {}
 
 inline bitboard bitboard::lsb() const
 {
@@ -467,13 +466,13 @@ inline bool bitboard::is_empty_or_singular() const
 inline bool bitboard::is_bit_set(sq_index index) const
 {
   ASSUME(index.is_valid());
-  return value & bit(index);
+  return (value & bit(index)) != UINT64_C(0);
 }
 
 inline bool bitboard::is_bit_non_set(sq_index index) const
 {
   ASSUME(index.is_valid());
-  return value & bit(index);
+  return (value & bit(index)) == UINT64_C(0);
 }
 
 inline void bitboard::reset_bit(sq_index index)
@@ -557,11 +556,11 @@ inline sq_index bitboard::lsb_index() const
 
 #ifdef SYSTEM_CTZ64
 
-  return SYSTEM_CTZ64(value);
+  return sq_index(SYSTEM_CTZ64(value));
 
 #else
 
-  static const char lsb_64_table[64] =
+  static const unsigned char lsb_64_table[64] =
   {
     63, 30,  3, 32, 59, 14, 11, 33,
     60, 24, 50,  9, 55, 19, 21, 34,
@@ -577,7 +576,8 @@ inline sq_index bitboard::lsb_index() const
 
   folded =  static_cast<unsigned>(((value ^ (value-1)) >> 32));
   folded ^= static_cast<unsigned>( (value ^ (value-1)));
-  return sq_index(lsb_64_table[folded * 0x78291ACF >> 26]);
+  return sq_index(
+    static_cast<unsigned>(lsb_64_table[folded * 0x78291ACF >> 26]));
 
 #endif
 }

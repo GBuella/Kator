@@ -105,6 +105,9 @@ position::piece_board::piece_board(string FEN_board)
 
   for (auto rank : ranks_8_to_1) {
     for (auto file : files_a_to_h) {
+      if (c == spaced_board.cend()) {
+        throw invalid_fen();
+      }
       piece piece(*c);
 
       if (piece.is_pawn() && rank.is_any_back_rank()) {
@@ -114,7 +117,9 @@ position::piece_board::piece_board(string FEN_board)
       board.squares[sq_index(rank, file).offset()] = piece.index();
       ++c;
     }
-    ++c;
+    if (c != spaced_board.cend()) {
+      ++c;
+    }
   }
   verify_counts(counts);
 }

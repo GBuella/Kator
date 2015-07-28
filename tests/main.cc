@@ -1,5 +1,6 @@
 
-#include "gtest/gtest.h"
+#include "gtest.h"
+
 #include "chess/bitboard.h"
 #include "engine/eval.h"
 

@@ -23,7 +23,7 @@ unsigned long compute_perft(const chess::position& position, unsigned depth)
 
   chess::move_list moves(position);
   if (type == perft_type::simple and depth == 1) {
-    return moves.count();
+    return static_cast<unsigned long>(moves.count());
   }
 
   unsigned long n = 0;

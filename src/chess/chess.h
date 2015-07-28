@@ -57,14 +57,14 @@ public:
   virtual const char* what() const noexcept;
 };
 
-class invalid_move_string: public std::exception
+class invalid_move_string
 {
 public:
   invalid_move_string(const char*);
   invalid_move_string(const std::string&);
-  virtual const char* what() const noexcept;
+  const char* what() const noexcept;
 private:
-  std::unique_ptr<char> move_error_string;
+  std::string move_error_string;
 };
 
 std::unique_ptr<game_state> parse_fen(std::string);

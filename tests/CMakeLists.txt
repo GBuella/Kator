@@ -6,6 +6,7 @@ SET(TEST_SOURCES_BASIC
   game.cc
 )
 
+set(gtest_force_shared_crt ON CACHE BOOL "Always use msvcrt.dll" )
 add_subdirectory(googletest)
 include_directories(googletest/include)
 
@@ -14,9 +15,20 @@ set(GTEST_LIBRARY googletest)
 set(GTEST_MAIN_LIBRARY googletest)
 
 find_package(GTest REQUIRED)
-add_executable(kator_gtest main.cc ${TEST_SOURCES_BASIC})
+add_executable(kator_gtest main.cc ${TEST_SOURCES_BASIC} $<TARGET_OBJECTS:kator_lib>)
 target_include_directories(kator_gtest PRIVATE ${GTEST_INCLUDE_DIRS})
-target_link_libraries(kator_gtest gtest_main kator_lib)
+target_link_libraries(kator_gtest gtest_main)
+
+if(COMPILER_SUPPORTS_WALL)
+  target_compile_options(kator_gtest PUBLIC -Wall)
+endif()
+
+if(MSVC)
+  target_compile_options(kator_gtest PUBLIC "$<$<CONFIG:Release>:/Za /MD>")
+  target_compile_options(kator_gtest PUBLIC "$<$<CONFIG:Debug>:/Za /MDd>")
+else()
+  target_compile_options(kator_gtest PUBLIC "${STANDARD_FLAG}")
+endif()
 
 GTEST_ADD_TESTS(kator_gtest "" ${TEST_SOURCES_BASIC})
 
