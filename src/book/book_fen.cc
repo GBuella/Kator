@@ -13,8 +13,6 @@ using ::std::unique_ptr;
 
 namespace kator
 {
-namespace book
-{
 
 namespace
 {
@@ -36,13 +34,12 @@ string get_fen_prefix(std::istream& stream)
 
 void
 add_entry(const string& line,
-          std::unordered_map<string, std::vector<chess::move>>& data)
+          std::unordered_map<string, std::vector<move>>& data)
 {
   std::istringstream iss(line);
-  unique_ptr<chess::game_state> state =
-    chess::game_state::parse_fen(get_fen_prefix(iss));
+  unique_ptr<game_state> state = game_state::parse_fen(get_fen_prefix(iss));
   string move_str;
-  std::vector<chess::move> moves; 
+  std::vector<move> moves; 
 
   while (iss >> move_str) {
     moves.push_back(state->parse_move(move_str));
@@ -79,9 +76,9 @@ book_fen::book_fen(const std::vector<std::string>& lines)
   }
 }
 
-std::vector<chess::move> book_fen::get_moves(const chess::game_state& state)
+std::vector<move> book_fen::get_moves(const game_state& state)
 {
-  std::vector<chess::move> moves = data.at(state.to_FEN());
+  std::vector<move> moves = data.at(state.to_FEN());
   if (state.can_flip) {
     for (auto move : data.at(state.flipped_to_FEN())) {
       moves.push_back(move.flipped());
@@ -90,6 +87,5 @@ std::vector<chess::move> book_fen::get_moves(const chess::game_state& state)
   return moves;
 }
 
-} /* namespace kator::book */
 } /* namespace kator */
 

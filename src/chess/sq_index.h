@@ -2,13 +2,12 @@
 #ifndef KATOR_CHESS_SQ_INDEX_H
 #define KATOR_CHESS_SQ_INDEX_H
 
-#include "player.h"
 #include "rank.h"
 #include "file.h"
 
+#include "platform/platform.h"
+
 namespace kator
-{
-namespace chess
 {
 
 class sq_index: public coordinate<63>
@@ -18,8 +17,8 @@ class sq_index: public coordinate<63>
 
 public:
 
-  constexpr sq_index(chess::rank r, chess::file f):
-    coordinate((r.value << 3) | f.value) {}
+  constexpr sq_index(rank rank, file file):
+    coordinate((rank.value << 3) | file.value) {}
 
   static constexpr sq_index none()
   {
@@ -31,20 +30,22 @@ public:
     return sq_index(0);
   }
 
-  std::string to_str(player point_of_view = player::to_move) const;
+  std::string
+  to_str(position_player point_of_view = player_to_move) const;
+
   sq_index(const std::string& str);
 
   enum class leave { uninitialized };
   sq_index(leave) {}
 
-  constexpr chess::rank rank() const
+  constexpr ::kator::rank rank() const
   {
-    return chess::rank(value >> 3);
+    return ::kator::rank(value >> 3);
   }
 
-  constexpr chess::file file() const
+  constexpr ::kator::file file() const
   {
-    return chess::file(value & 7);
+    return ::kator::file(value & 7);
   }
 
   void shift_east(int delta = 1)
@@ -130,9 +131,9 @@ public:
     return sq_index(value ^ 0x38);
   }
 
-  constexpr sq_index effective_of(player point_of_view) const
+  constexpr sq_index effective_of(position_player point_of_view) const
   {
-    return (point_of_view == player::to_move) ? *this : flipped();
+    return (point_of_view == player_to_move) ? *this : flipped();
   }
 
   void flip()
@@ -171,10 +172,10 @@ public:
 
   bool stays_in_board(const direction& direction) const
   {
-    if (!chess::rank(this->rank().value + direction.rank_delta).is_valid()) {
+    if (!::kator::rank(this->rank().value + direction.rank_delta).is_valid()) {
       return false;
     }
-    if (!chess::file(this->file().value + direction.file_delta).is_valid()) {
+    if (!::kator::file(this->file().value + direction.file_delta).is_valid()) {
       return false;
     }
     return true;
@@ -349,7 +350,6 @@ constexpr sq_index h8(rank_8, file_h);
 
 } /* anonym namespace */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_SQ_INDEX_H) */

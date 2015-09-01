@@ -15,13 +15,13 @@ namespace kator
 struct conf
 {
   conf();
-  chess::move_notation move_notation;
+  move_notation notation;
   unsigned main_hash_size;
   unsigned aux_hash_size;
   unsigned analyze_hash_size;
   unsigned analyze_aux_hash_size;
   std::string book_path;
-  book::book_type book_type;
+  book_type book_type;
   bool use_unicode;
 }; /* struct conf */
 
@@ -31,9 +31,9 @@ class kator
 {
 public:
 
-  static std::unique_ptr<kator> create(std::unique_ptr<book::book> initial_book,
+  static std::unique_ptr<kator> create(std::unique_ptr<book> initial_book,
                                        std::unique_ptr<engine::engine>,
-                                       std::unique_ptr<chess::game>,
+                                       std::unique_ptr<game>,
                                        const conf&,
                                        std::ostream& out,
                                        std::ostream& err);

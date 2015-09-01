@@ -27,13 +27,12 @@
 #include <array>
 #include <cstddef>
 
-#include "platform_low_level.h"
+#include "platform/general_intrinsics.h"
 
 #include "chess.h"
+#include "sq_index.h"
 
 namespace kator
-{
-namespace chess
 {
 
 class bitboard
@@ -65,7 +64,7 @@ public:
   uint64_t pext(bitboard mask) const;
   static bitboard pdep(uint64_t value, bitboard mask);
 
-#ifdef USE_PEXT_BITBOARD
+#ifdef KATOR_USE_PEXT_BITBOARD
 
   struct magical {
     uint64_t pre_mask;
@@ -92,7 +91,7 @@ public:
     static void lookup_tables_init();
   };
 
-#else // defined(USE_PEXT_BITBOARD)
+#else // defined(KATOR_USE_PEXT_BITBOARD)
 
   struct magical {
     uint64_t pre_mask;
@@ -119,7 +118,7 @@ public:
     static void lookup_tables_init();
   };
 
-#endif // !defined(USE_PEXT_BITBOARD)
+#endif // !defined(KATOR_USE_PEXT_BITBOARD)
 
 public:
 
@@ -400,9 +399,9 @@ constexpr bitboard::bitboard(sq_index index, indices... others):
 
 inline bitboard bitboard::lsb() const
 {
-#ifdef SYSTEM_GET_LSB64
+#ifdef KATOR_SYSTEM_GET_LSB64
 
-  return bitboard(SYSTEM_GET_LSB64(value));
+  return bitboard(KATOR_SYSTEM_GET_LSB64(value));
 
 #else
 
@@ -413,9 +412,9 @@ inline bitboard bitboard::lsb() const
 
 inline uint64_t bitboard::reset_lsb_uint64_t(uint64_t arg)
 {
-#ifdef SYSTEM_RESET_LSB64
+#ifdef KATOR_SYSTEM_RESET_LSB64
 
-  return SYSTEM_RESET_LSB64(arg);
+  return KATOR_SYSTEM_RESET_LSB64(arg);
 
 #else
 
@@ -431,9 +430,9 @@ inline void bitboard::reset_lsb()
 
 inline int bitboard::popcnt() const
 {
-#ifdef SYSTEM_POPCNT64
+#ifdef KATOR_SYSTEM_POPCNT64
 
-  return SYSTEM_POPCNT64(value);
+  return KATOR_SYSTEM_POPCNT64(value);
 
 #else
 
@@ -513,9 +512,9 @@ inline void bitboard::complement_bit_mem(bitboard* board, sq_index index)
 
 inline void bitboard::flip()
 {
-#ifdef SYSTEM_BYTESWAP64
+#ifdef KATOR_SYSTEM_BYTESWAP64
 
-  value = SYSTEM_BYTESWAP64(value);
+  value = KATOR_SYSTEM_BYTESWAP64(value);
 
 #else
 
@@ -532,7 +531,7 @@ inline void bitboard::flip()
 
 static inline bitboard flip(const bitboard* value)
 {
-#ifdef USE_X86_MOVBE_GASM
+#ifdef KATOR_USE_X86_MOVBE_GASM
 
   uint64_t temp;
 
@@ -550,13 +549,19 @@ static inline bitboard flip(const bitboard* value)
 #endif
 }
 
+static inline bitboard flip(bitboard value)
+{
+  value.flip();
+  return value;
+}
+
 inline sq_index bitboard::lsb_index() const
 {
   ASSUME(is_nonempty());
 
-#ifdef SYSTEM_CTZ64
+#ifdef KATOR_SYSTEM_CTZ64
 
-  return sq_index(SYSTEM_CTZ64(value));
+  return sq_index(KATOR_SYSTEM_CTZ64(value));
 
 #else
 
@@ -722,7 +727,7 @@ inline constexpr bitboard right_of(bitboard arg)
 
 inline uint64_t bitboard::pext(bitboard mask) const
 {
-#ifdef HAS_BMI2_PEXT_BITBOARD_SUPPORT
+#ifdef KATOR_HAS_BMI2_PEXT_BITBOARD_SUPPORT
   return _pext_u64(value, mask.value);
 #else
 
@@ -742,7 +747,7 @@ inline uint64_t bitboard::pext(bitboard mask) const
 
 inline bitboard bitboard::pdep(uint64_t value, bitboard mask)
 {
-#ifdef HAS_BMI2_PEXT_BITBOARD_SUPPORT
+#ifdef KATOR_HAS_BMI2_PEXT_BITBOARD_SUPPORT
   return bitboard(_pdep_u64(value, mask.value));
 #else
 
@@ -760,7 +765,6 @@ inline bitboard bitboard::pdep(uint64_t value, bitboard mask)
 #endif
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_BITBOARD_H) */

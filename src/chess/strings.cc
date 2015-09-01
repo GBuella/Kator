@@ -9,8 +9,6 @@ using ::std::string;
 
 namespace kator
 {
-namespace chess
-{
 
 const char* invalid_fen::what() const noexcept
 {
@@ -52,17 +50,6 @@ const char* invalid_move_string::what() const noexcept
 }
 
 
-std::ostream& operator<< (std::ostream& stream, player player)
-{
-  switch (player) {
-    case kator::chess::player::to_move:
-      return stream << "player::to_move";
-    case kator::chess::player::opponent:
-      return stream << "player::to_opponent";
-  }
-  return stream << "[invalid enum]";
-}
-
 std::ostream& operator<< (std::ostream& stream, real_player player)
 {
   switch (player) {
@@ -70,8 +57,9 @@ std::ostream& operator<< (std::ostream& stream, real_player player)
       return stream << "white";
     case black:
       return stream << "black";
+    default:
+      return stream << "[internal error]";
   }
-  return stream << "[invalid enum]";
 }
 
 string file::to_str() const
@@ -99,11 +87,11 @@ bool file::is_valid_char(char c)
   return (c >= 'a' && c <= 'h') || (c >= 'A' && c <= 'H');
 }
 
-string rank::to_str(chess::player point_of_view) const
+string rank::to_str(position_player point_of_view) const
 {
   string result;
 
-  if (point_of_view == player::opponent) {
+  if (point_of_view == player_opponent) {
     result.push_back(static_cast<char>('1' + value));
   }
   else {
@@ -129,51 +117,48 @@ bool rank::is_valid_char(char c)
 
 static const char piece_chars[] = "  PpRrKkBbNnQq";
 
-bool piece::is_valid_char(char c)
+bool real_piece::is_valid_char(char c)
 {
   return c != ' ' and std::strchr(piece_chars, c) != nullptr;
 }
 
-piece::piece(char c)
+real_piece::real_piece(char c)
 {
   switch (tolower(c)) {
     case 'p':
-      value = piece_index::pawn;
+      type = piece::pawn;
       break;
     case 'k':
-      value = piece_index::king;
+      type = piece::king;
       break;
     case 'n':
-      value = piece_index::knight;
+      type = piece::knight;
       break;
     case 'b':
-      value = piece_index::bishop;
+      type = piece::bishop;
       break;
     case 'r':
-      value = piece_index::rook;
+      type = piece::rook;
       break;
     case 'q':
-      value = piece_index::queen;
+      type = piece::queen;
       break;
     default:
-      value = piece_index::nonpiece;
-      return;
+      throw;
   }
-  if (islower(c)) {
-    *this = opponent_of(*this);
-  }
+  player = islower(c) ? real_player::black : real_player::white;
 }
 
-string piece::to_str(chess::player point_of_view) const
+char real_piece::to_char() const
+{
+  return piece_chars[offset()];
+}
+
+string real_piece::to_str() const
 {
   string result;
 
-  if (point_of_view == chess::player::to_move) {
-    result.push_back(piece_chars[index()]);
-  }
-  else {
-    result.push_back(piece_chars[opponent_of(*this).index()]);
-  }
+  result.push_back(to_char());
   return result;
 }
 
@@ -195,60 +180,60 @@ static const char* u_black_king = "\U0000265a";
 
 }
 
-string piece::to_figurine(chess::player point_of_view) const
+string real_piece::to_figurine() const
 {
-  piece temp = *this;
-
-  if (point_of_view == chess::player::opponent) {
-    temp = opponent_of(temp);
+  switch (player) {
+    case white:
+      switch (type) {
+        case piece::pawn: return u_white_pawn;
+        case piece::rook: return u_white_rook;
+        case piece::knight: return u_white_knight;
+        case piece::bishop: return u_white_bishop;
+        case piece::queen: return u_white_queen;
+        case piece::king: return u_white_king;
+        default: return " ";
+      }
+    case black:
+      switch (type) {
+        case piece::pawn: return u_black_pawn;
+        case piece::rook: return u_black_rook;
+        case piece::knight: return u_black_knight;
+        case piece::bishop: return u_black_bishop;
+        case piece::queen: return u_black_queen;
+        case piece::king: return u_black_king;
+        default: return " ";
+      }
+    default: return " ";
   }
-  switch (temp.value) {
-    case piece_index::pawn: return u_white_pawn;
-    case piece_index::rook: return u_white_rook;
-    case piece_index::knight: return u_white_knight;
-    case piece_index::bishop: return u_white_bishop;
-    case piece_index::queen: return u_white_queen;
-    case piece_index::king: return u_white_king;
-    case piece_index::opponent_pawn: return u_black_pawn;
-    case piece_index::opponent_rook: return u_black_rook;
-    case piece_index::opponent_knight: return u_black_knight;
-    case piece_index::opponent_bishop: return u_black_bishop;
-    case piece_index::opponent_queen: return u_black_queen;
-    case piece_index::opponent_king: return u_black_king;
-    case piece_index::nonpiece:
-    case piece_index::index_1:
-      return " ";
-  }
-  return " ";
 }
 
-string piece::to_str(chess::player point_of_view, bool use_figurines) const
+string real_piece::to_str(bool use_figurines) const
 {
   if (use_figurines) {
-    return to_figurine(point_of_view);
+    return to_figurine();
   }
   else {
-    return to_str(point_of_view);
+    return to_str();
   }
 }
 
-std::ostream& operator<< (std::ostream& stream, piece piece)
+std::ostream& operator<< (std::ostream& stream, real_piece piece)
 {
-  return stream << piece.to_str(player::to_move);
-}
-
-string sq_index::to_str(kator::chess::player point_of_view) const
-{
-  return this->file().to_str() + this->rank().to_str(point_of_view);
+  return stream << piece.to_str();
 }
 
 sq_index::sq_index(const std::string& str):
-  sq_index(chess::rank(str.at(1)), chess::file(str.at(0)))
+  sq_index(kator::rank(str.at(1)), kator::file(str.at(0)))
 {}
+
+string sq_index::to_str(position_player point_of_view) const
+{
+  return file().to_str() + rank().to_str(point_of_view);
+}
 
 std::ostream& operator<< (std::ostream& stream, sq_index index)
 {
-  return stream << index.to_str(player::to_move);
+  return stream << index.to_str(player_to_move);
 }
 
 castle_rights::castle_rights(std::string FEN_string)
@@ -319,7 +304,7 @@ void cleanup_move_string(string& str)
   original = str;
   str = "";
   for (auto c : original) {
-    if (piece::is_valid_char(c)
+    if (real_piece::is_valid_char(c)
         or rank::is_valid_char(c)
         or file::is_valid_char(c)
         or std::tolower(c) == 'o')
@@ -329,5 +314,4 @@ void cleanup_move_string(string& str)
   }
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */

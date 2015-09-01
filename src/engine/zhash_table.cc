@@ -38,7 +38,7 @@ zhash_table::zhash_table(unsigned log2_size)
   data.reset(pointer);
 }
 
-hash_entry zhash_table::load_entry(chess::zobrist_hash key) const noexcept
+hash_entry zhash_table::load_entry(zobrist_hash key) const noexcept
 {
   if (not is_set()) {
     return empty_hash_entry;
@@ -62,13 +62,13 @@ hash_entry zhash_table::load_entry(chess::zobrist_hash key) const noexcept
 }
 
 hash_entry
-zhash_table::load_entry(const chess::position& position) const noexcept
+zhash_table::load_entry(const position& position) const noexcept
 {
   return load_entry(position.get_zhash());
 }
 
 void
-zhash_table::store_entry(chess::zobrist_hash key, hash_entry entry) noexcept
+zhash_table::store_entry(zobrist_hash key, hash_entry entry) noexcept
 {
   if (not is_set()) {
     return;
@@ -85,7 +85,7 @@ zhash_table::store_entry(chess::zobrist_hash key, hash_entry entry) noexcept
   }
 }
 
-void zhash_table::store_entry(const chess::position& position,
+void zhash_table::store_entry(const position& position,
                               hash_entry entry) noexcept
 {
   store_entry(position.get_zhash(), entry);

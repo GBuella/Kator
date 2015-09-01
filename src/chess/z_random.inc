@@ -1,36 +1,35 @@
 
 #include "zobrist_hash.h"
 #include "chess.h"
+#include "position.h"
 
 namespace kator
 {
-namespace chess
-{
 
 // All pieces are expected to have a numeric value in the [2, 13] range {{{
-static_assert(2 <= pawn.index() and pawn.index() <= 13,
+static_assert(2 <= pawn and pawn <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_pawn.index() and opponent_pawn.index() <= 13,
+static_assert(2 <= opponent_pawn and opponent_pawn <= 13,
               "Invalid piece index");
-static_assert(2 <= rook.index() and rook.index() <= 13,
+static_assert(2 <= rook and rook <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_rook.index() and opponent_rook.index() <= 13,
+static_assert(2 <= opponent_rook and opponent_rook <= 13,
               "Invalid piece index");
-static_assert(2 <= king.index() and king.index() <= 13,
+static_assert(2 <= king and king <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_king.index() and opponent_king.index() <= 13,
+static_assert(2 <= opponent_king and opponent_king <= 13,
               "Invalid piece index");
-static_assert(2 <= bishop.index() and bishop.index() <= 13,
+static_assert(2 <= bishop and bishop <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_bishop.index() and opponent_bishop.index() <= 13,
+static_assert(2 <= opponent_bishop and opponent_bishop <= 13,
               "Invalid piece index");
-static_assert(2 <= knight.index() and knight.index() <= 13,
+static_assert(2 <= knight and knight <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_knight.index() and opponent_knight.index() <= 13,
+static_assert(2 <= opponent_knight and opponent_knight <= 13,
               "Invalid piece index");
-static_assert(2 <= queen.index() and queen.index() <= 13,
+static_assert(2 <= queen and queen <= 13,
               "Invalid piece index");
-static_assert(2 <= opponent_queen.index() and opponent_queen.index() <= 13,
+static_assert(2 <= opponent_queen and opponent_queen <= 13,
               "Invalid piece index");
 //}}}
 
@@ -497,6 +496,5 @@ const uint64_t zobrist_hash::z_random[15][64] =
 
 };
 
-} /* namespace chess */
 } /* namespace kator */
 

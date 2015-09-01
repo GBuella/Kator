@@ -9,8 +9,6 @@
 
 namespace kator
 {
-namespace chess
-{
 
 struct game_state;
 
@@ -37,7 +35,6 @@ public:
 
 }; /* class game */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_GAME_H) */

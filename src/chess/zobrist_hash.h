@@ -16,15 +16,13 @@
 
 namespace kator
 {
-namespace chess
-{
 
 class zobrist_hash
 {
 public:
 
   constexpr explicit zobrist_hash(uint64_t);
-  void xor_piece(piece, sq_index);
+  void xor_piece(square, sq_index);
   void xor_castle_right(castle_rights::side);
   void xor_en_passant_file(file);
   constexpr uint64_t get_value() const;
@@ -32,14 +30,14 @@ public:
 
 private:
   uint64_t value;
-  static const uint64_t z_random[piece::array_size + 1][64];
+  static const uint64_t z_random[piece_array_size + 1][64];
 
 }; /* class zobrist_hash */
 
 class zobrist_hash_pair
 {
 public:
-  void xor_piece(piece, sq_index);
+  void xor_piece(square, sq_index);
   void xor_castle_right(castle_rights::side);
   void xor_en_passant_file(file);
   operator zobrist_hash() const;
@@ -60,9 +58,9 @@ inline constexpr zobrist_hash::zobrist_hash(uint64_t raw):
 {
 }
 
-inline void zobrist_hash::xor_piece(piece piece, sq_index index)
+inline void zobrist_hash::xor_piece(square piece, sq_index index)
 {
-  value ^= z_random[piece.index()][index.offset()];
+  value ^= z_random[piece][index.offset()];
 }
 
 inline constexpr uint64_t zobrist_hash::get_value() const
@@ -77,15 +75,15 @@ inline void zobrist_hash::clear()
 
 inline void zobrist_hash::xor_castle_right(castle_rights::side side)
 {
-  value ^= z_random[piece::array_size][static_cast<unsigned>(side)];
+  value ^= z_random[piece_array_size][static_cast<unsigned>(side)];
 }
 
 inline void zobrist_hash::xor_en_passant_file(file file)
 {
-  value ^= z_random[piece::array_size][4 + file.offset()];
+  value ^= z_random[piece_array_size][4 + file.offset()];
 }
 
-inline void zobrist_hash_pair::xor_piece(piece piece, sq_index index)
+inline void zobrist_hash_pair::xor_piece(square piece, sq_index index)
 {
   hash.xor_piece(piece, index);
   opponent_hash.xor_piece(opponent_of(piece), flip(index));
@@ -122,7 +120,6 @@ inline zobrist_hash_pair zobrist_hash_pair::flipped() const
   return result;
 }
 
-} /* namespace chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_ZOBRIST_HASH_H) */

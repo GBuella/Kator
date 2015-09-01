@@ -3,12 +3,11 @@
 #define KATOR_CHESS_RANK_H
 
 #include "coordinate.h"
+#include "chess.h"
 
 #include <string>
 
 namespace kator
-{
-namespace chess
 {
 
 class rank: public coordinate<7>
@@ -24,16 +23,16 @@ public:
 
   explicit rank(char);
   static bool is_valid_char(char);
-  std::string to_str(player point_of_view) const;
+  std::string to_str(position_player point_of_view) const;
 
   constexpr rank flipped() const
   {
     return rank(7 - value);
   }
 
-  constexpr rank effective_of(player point_of_view) const
+  constexpr rank effective_of(position_player point_of_view) const
   {
-    return (point_of_view == player::to_move) ? *this : flipped();
+    return (point_of_view == player_to_move) ? *this : flipped();
   }
 
   static constexpr rank back_rank()
@@ -123,7 +122,6 @@ constexpr rank rank_8 = north_of(rank_7);
 
 } /* anonym namespace */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_RANK_H) */

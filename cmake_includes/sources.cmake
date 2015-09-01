@@ -1,6 +1,6 @@
 
 
-SET(SOURCES 
+SET(KATOR_COMMON_SOURCES 
      src/chess/position.cc
      src/chess/bitboard.cc
      src/chess/move_list.cc
@@ -15,7 +15,8 @@ SET(SOURCES
      src/str.cc
      src/tests.cc
      src/kator.cc
-     src/platform_low_level.cc
+
+     src/platform/platform.cc
 
      src/engine/zhash_table.cc
      src/engine/engine.cc

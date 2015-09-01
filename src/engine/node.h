@@ -16,15 +16,15 @@ class node
 public:
 
   // For creating a root node
-  node(const chess::position&);
+  node(const position&);
 
 private:
 
-  chess::position position;
-  chess::move_list moves;
+  position position;
+  move_list moves;
   position_value alpha;
   position_value beta;
-  std::array<chess::move, 3> killers;
+  std::array<move, 3> killers;
 
   node();
 

@@ -3,7 +3,7 @@
 #include "chess/move.h"
 #include "chess/game_state.h"
 
-using namespace ::kator::chess;
+using namespace ::kator;
 
 TEST(chess_game_state, parse_fen)
 {
@@ -15,10 +15,14 @@ TEST(chess_game_state, parse_fen)
 
   ASSERT_EQ(white, state->turn);
   ASSERT_TRUE(state->can_flip);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_FALSE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_TRUE(state->position->can_castle_queenside());
+  ASSERT_TRUE(state->position->can_castle_kingside());
+  ASSERT_TRUE(state->position->opponent_can_castle_queenside());
+  ASSERT_TRUE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -26,11 +30,15 @@ TEST(chess_game_state, parse_fen)
       "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"));
 
   ASSERT_EQ(black, state->turn);
-  ASSERT_EQ(player::opponent, state->whites_view);
+  ASSERT_EQ(player_opponent, state->whites_view);
   ASSERT_FALSE(state->can_flip);
   ASSERT_FALSE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_TRUE(state->position->can_castle_queenside());
+  ASSERT_TRUE(state->position->can_castle_kingside());
+  ASSERT_TRUE(state->position->opponent_can_castle_queenside());
+  ASSERT_TRUE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -38,11 +46,15 @@ TEST(chess_game_state, parse_fen)
       "rnbqkbnr/p1pppppp/8/1p6/4P3/8/PPPP1PPP/RNBQKBNR w KQkq b6 0 1"));
 
   ASSERT_EQ(white, state->turn);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_FALSE(state->can_flip);
   ASSERT_FALSE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_TRUE(state->position->can_castle_queenside());
+  ASSERT_TRUE(state->position->can_castle_kingside());
+  ASSERT_TRUE(state->position->opponent_can_castle_queenside());
+  ASSERT_TRUE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -50,11 +62,15 @@ TEST(chess_game_state, parse_fen)
       "rnbqkbnr/p1pppppp/8/1p6/4P3/8/PPPP1PPP/RNBQKBNR w - - 0 1"));
 
   ASSERT_EQ(white, state->turn);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_TRUE(state->can_flip);
   ASSERT_FALSE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_FALSE(state->position->can_castle_queenside());
+  ASSERT_FALSE(state->position->can_castle_kingside());
+  ASSERT_FALSE(state->position->opponent_can_castle_queenside());
+  ASSERT_FALSE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -62,11 +78,15 @@ TEST(chess_game_state, parse_fen)
         "1n2k3/ppppp1pp/2qrn3/r7/2b1Kp2/8/PPPPPPPP/RNBQ1BNR w - -"));
 
   ASSERT_EQ(white, state->turn);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_TRUE(state->can_flip);
   ASSERT_TRUE(state->in_check);
   ASSERT_TRUE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_FALSE(state->position->can_castle_queenside());
+  ASSERT_FALSE(state->position->can_castle_kingside());
+  ASSERT_FALSE(state->position->opponent_can_castle_queenside());
+  ASSERT_FALSE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -74,11 +94,15 @@ TEST(chess_game_state, parse_fen)
         "1n2k3/ppppp1pp/3rn3/r7/2b1Kp2/7q/7P/8 w - -"));
 
   ASSERT_EQ(white, state->turn);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_TRUE(state->can_flip);
   ASSERT_FALSE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_TRUE(state->is_stale_mate);
+  ASSERT_FALSE(state->position->can_castle_queenside());
+  ASSERT_FALSE(state->position->can_castle_kingside());
+  ASSERT_FALSE(state->position->opponent_can_castle_queenside());
+  ASSERT_FALSE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -86,23 +110,31 @@ TEST(chess_game_state, parse_fen)
         "1n2k3/ppppp1np/3r4/r4p2/2b1K3/7q/PPPPPPPP/RNBQ1BNR w - -"));
 
   ASSERT_EQ(white, state->turn);
-  ASSERT_EQ(player::to_move, state->whites_view);
+  ASSERT_EQ(player_to_move, state->whites_view);
   ASSERT_TRUE(state->can_flip);
   ASSERT_TRUE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_FALSE(state->position->can_castle_queenside());
+  ASSERT_FALSE(state->position->can_castle_kingside());
+  ASSERT_FALSE(state->position->opponent_can_castle_queenside());
+  ASSERT_FALSE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
   ASSERT_NO_THROW(state = parse_fen(
-        "r2bk1nr/ppp1pppp/3p3b/8/Q6n/2P3q1/PP1PPPPP/RNB1KBNR b KQkq -"));
+        "r2bk1nr/ppp1pppp/3p3b/8/Q6n/2P3q1/PP1PPPPP/RNB1KBNR b KQk -"));
 
   ASSERT_EQ(black, state->turn);
-  ASSERT_EQ(player::opponent, state->whites_view);
+  ASSERT_EQ(player_opponent, state->whites_view);
   ASSERT_TRUE(state->can_flip);
   ASSERT_TRUE(state->in_check);
   ASSERT_FALSE(state->is_check_mate);
   ASSERT_FALSE(state->is_stale_mate);
+  ASSERT_FALSE(state->position->can_castle_queenside());
+  ASSERT_TRUE(state->position->can_castle_kingside());
+  ASSERT_TRUE(state->position->opponent_can_castle_queenside());
+  ASSERT_TRUE(state->position->opponent_can_castle_kingside());
   ASSERT_EQ(unsigned(0), state->half_moves);
   ASSERT_EQ(unsigned(1), state->full_moves);
 
@@ -322,7 +354,7 @@ TEST(chess_game_state, parse_move)
   ASSERT_THROW(state->parse_move("e1e2"), invalid_move_string);
   ASSERT_THROW(state->parse_move("d7d6"), invalid_move_string);
 
-  move push(a2, a4, pawn, move::pawn_double_push);
+  move push(a2, a4, piece::pawn, move::pawn_double_push);
 
   ASSERT_EQ(push, state->parse_move("a2a4"));
 
@@ -356,41 +388,41 @@ TEST(chess_game_state, print_move)
 
   std::unique_ptr<game_state> state = parse_fen(starting_fen);
 
-  move push(a2, a4, pawn);
+  move push(a2, a4, piece::pawn);
 
   ASSERT_EQ("a2a4", state->print_move(push, coordinate));
   ASSERT_EQ("a4", state->print_move(push, SAN));
   ASSERT_EQ("a4", state->print_move(push, FAN));
 
-  move general(g1, f3, knight);
+  move general(g1, f3, piece::knight);
 
   ASSERT_EQ("g1f3", state->print_move(general, coordinate));
   ASSERT_EQ("Nf3", state->print_move(general, SAN));
 
   state = parse_fen(
-      "r3k2r/p1ppqpb1/bnP1pnp1/4N3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -");
+    "r3k2r/p1ppqpb1/bnP1pnp1/4N3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -");
 
-  general = move(f3, f5, queen);
+  general = move(f3, f5, piece::queen);
 
   ASSERT_EQ("f3f5", state->print_move(general, coordinate));
   ASSERT_EQ("Qf5", state->print_move(general, SAN));
 
-  general = move(f3, f6, queen, knight);
+  general = move(f3, f6, piece::queen, piece::knight);
 
   ASSERT_EQ("f3f6", state->print_move(general, coordinate));
   ASSERT_EQ("Qxf6", state->print_move(general, SAN));
 
-  move capture(c6, d7, pawn, pawn);
+  move capture(c6, d7, piece::pawn, piece::pawn);
 
   ASSERT_EQ("c6d7", state->print_move(capture, coordinate));
   ASSERT_EQ("cxd7+", state->print_move(capture, SAN));
 
-  capture = move(e5, g6, knight, pawn);
+  capture = move(e5, g6, piece::knight, piece::pawn);
 
   ASSERT_EQ("e5g6", state->print_move(capture, coordinate));
   ASSERT_EQ("Nxg6", state->print_move(capture, SAN));
 
-  capture = move(e2, a6, bishop, bishop);
+  capture = move(e2, a6, piece::bishop, piece::bishop);
 
   ASSERT_EQ("e2a6", state->print_move(capture, coordinate));
   ASSERT_EQ("Bxa6", state->print_move(capture, SAN));
@@ -406,49 +438,56 @@ TEST(chess_game_state, print_move)
   ASSERT_EQ("O-O-O", state->print_move(black_castle_queenside, SAN));
 
   state = parse_fen(
-      "r3k2r/p1ppqpb1/bnP1pnp1/4N3/Pp2P3/2N2Q2/1PPBBPpP/R3K2R b KQkq a3 0 1");
+    "r3k2r/p1ppqpb1/bnP1pnp1/4N3/Pp2P3/2N2Q2/1PPBBPpP/R3K2R b KQkq a3 0 1");
 
-  ASSERT_EQ("bxa3e.p.",
-      state->print_move(move(b4, a3, pawn, pawn, move::en_passant), SAN));
-  ASSERT_EQ("g1=Q+",
-      state->print_move(move(g2, g1, queen, move::promotion), SAN));
-  ASSERT_EQ("gxh1=N",
-      state->print_move(move(g2, h1, knight, rook, move::promotion), SAN));
-  ASSERT_EQ("gxh1=R+",
-      state->print_move(move(g2, h1, rook, rook, move::promotion), SAN));
-
-  state = parse_fen(
-      "r1k4r/p1ppqpb1/bnP1pNp1/8/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
-
-  ASSERT_EQ("Ncd5", state->print_move(move(c3, d5, knight), SAN));
-  ASSERT_EQ("Nfd5", state->print_move(move(f6, d5, knight), SAN));
+  ASSERT_EQ("bxa3e.p.", state->print_move(
+    move(b4, a3, piece::pawn, piece::pawn, move::en_passant), SAN));
+  ASSERT_EQ("g1=Q+", state->print_move(
+    move(g2, g1, piece::queen, move::promotion), SAN));
+  ASSERT_EQ("gxh1=N", state->print_move(
+    move(g2, h1, piece::knight, piece::rook, move::promotion), SAN));
+  ASSERT_EQ("gxh1=R+", state->print_move(
+    move(g2, h1, piece::rook, piece::rook, move::promotion), SAN));
 
   state = parse_fen(
-      "r1k4r/p1Npqpb1/bnP1pNp1/8/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
+    "r1k4r/p1ppqpb1/bnP1pNp1/8/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
 
-  ASSERT_EQ("N3d5", state->print_move(move(c3, d5, knight), SAN));
-  ASSERT_EQ("Na2", state->print_move(move(c3, a2, knight), SAN));
-  ASSERT_EQ("N7d5", state->print_move(move(c7, d5, knight), SAN));
-  ASSERT_EQ("Nce8", state->print_move(move(c7, e8, knight), SAN));
-  ASSERT_EQ("Nxa8", state->print_move(move(c7, a8, knight, rook), SAN));
-  ASSERT_EQ("Nfd5", state->print_move(move(f6, d5, knight), SAN));
+  ASSERT_EQ("Ncd5", state->print_move(move(c3, d5, piece::knight), SAN));
+  ASSERT_EQ("Nfd5", state->print_move(move(f6, d5, piece::knight), SAN));
 
   state = parse_fen(
-      "r1k4r/p1Npqp2/bnP1pNp1/3b4/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
+    "r1k4r/p1Npqpb1/bnP1pNp1/8/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
 
-  ASSERT_EQ("N3xd5", state->print_move(move(c3, d5, knight, bishop), SAN));
-  ASSERT_EQ("Na2", state->print_move(move(c3, a2,   knight), SAN));
-  ASSERT_EQ("N7xd5", state->print_move(move(c7, d5, knight, bishop), SAN));
-  ASSERT_EQ("Nce8", state->print_move(move(c7, e8,  knight), SAN));
-  ASSERT_EQ("Nxa8", state->print_move(move(c7, a8,  knight, rook), SAN));
-  ASSERT_EQ("Nfxd5", state->print_move(move(f6, d5, knight, bishop), SAN));
+  ASSERT_EQ("N3d5", state->print_move(move(c3, d5, piece::knight), SAN));
+  ASSERT_EQ("Na2", state->print_move(move(c3, a2, piece::knight), SAN));
+  ASSERT_EQ("N7d5", state->print_move(move(c7, d5, piece::knight), SAN));
+  ASSERT_EQ("Nce8", state->print_move(move(c7, e8, piece::knight), SAN));
+  ASSERT_EQ("Nxa8", state->print_move(
+    move(c7, a8, piece::knight, piece::rook), SAN));
+  ASSERT_EQ("Nfd5", state->print_move(move(f6, d5, piece::knight), SAN));
+
+  state = parse_fen(
+    "r1k4r/p1Npqp2/bnP1pNp1/3b4/Pp2P3/2N2Q2/1PPBBPpP/R3K2R w - - 0 1");
+
+  ASSERT_EQ("N3xd5", state->print_move(
+    move(c3, d5, piece::knight, piece::bishop), SAN));
+  ASSERT_EQ("Na2", state->print_move(
+    move(c3, a2,   piece::knight), SAN));
+  ASSERT_EQ("N7xd5", state->print_move(
+    move(c7, d5, piece::knight, piece::bishop), SAN));
+  ASSERT_EQ("Nce8", state->print_move(
+    move(c7, e8,  piece::knight), SAN));
+  ASSERT_EQ("Nxa8", state->print_move(
+    move(c7, a8,  piece::knight, piece::rook), SAN));
+  ASSERT_EQ("Nfxd5", state->print_move(
+    move(f6, d5, piece::knight, piece::bishop), SAN));
 }
 
 TEST(chess_game_state, make_move)
 {
   auto state = parse_fen(starting_fen);
 
-  state = state->make_move(move(a2, a4, pawn, move::pawn_double_push));
+  state = state->make_move(move(a2, a4, piece::pawn, move::pawn_double_push));
 
   ASSERT_EQ(
     "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1",
@@ -458,7 +497,7 @@ TEST(chess_game_state, make_move)
   ASSERT_EQ(black, state->turn);
   ASSERT_EQ(a3, state->en_passant_target_square);
 
-  state = state->make_move(move(d7, d5, pawn, move::pawn_double_push));
+  state = state->make_move(move(d7, d5, piece::pawn, move::pawn_double_push));
 
   ASSERT_EQ(
     "rnbqkbnr/ppp1pppp/8/3p4/P7/8/1PPPPPPP/RNBQKBNR w KQkq d6 0 2",
@@ -468,7 +507,7 @@ TEST(chess_game_state, make_move)
   ASSERT_EQ(white, state->turn);
   ASSERT_EQ(d6, state->en_passant_target_square);
 
-  state = state->make_move(move(b1, a3, knight));
+  state = state->make_move(move(b1, a3, piece::knight));
 
   ASSERT_EQ(
     "rnbqkbnr/ppp1pppp/8/3p4/P7/N7/1PPPPPPP/R1BQKBNR b KQkq - 1 2",
@@ -479,7 +518,7 @@ TEST(chess_game_state, make_move)
   ASSERT_EQ(black, state->turn);
   ASSERT_FALSE(state->en_passant_target_square.is_set());
 
-  state = state->make_move(move(c8, f5, bishop));
+  state = state->make_move(move(c8, f5, piece::bishop));
 
   ASSERT_EQ(
     "rn1qkbnr/ppp1pppp/8/3p1b2/P7/N7/1PPPPPPP/R1BQKBNR w KQkq - 2 3",

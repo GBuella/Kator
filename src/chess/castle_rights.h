@@ -10,8 +10,6 @@
 
 namespace kator
 {
-namespace chess
-{
 
 class castle_rights
 {
@@ -35,28 +33,26 @@ public:
   castle_rights(std::string FEN_string);
   std::string generate_castle_FEN(real_player point_of_view) const;
 
-protected:
+private:
 
   bool clears_right_queenside(move) const;
   bool clears_right_opponent_queenside(move) const;
   bool clears_right_kingside(move) const;
   bool clears_right_opponent_kingside(move) const;
 
-  void clear_castle_right(side);
+  void clear_side(side);
 
   enum class leave { uninitialized };
   castle_rights(leave) {}
-  castle_rights(const castle_rights&, player point_of_view);
+  castle_rights(const castle_rights&, position_player point_of_view);
 
   void flip();
-  castle_rights castle_flipped() const noexcept;
-
-
-private:
+  castle_rights flipped() const noexcept;
 
   std::array<bool, 4> rights;
   castle_rights() {}
 
+  friend class position;
 };
 
 inline bool castle_rights::can_castle_queenside() const
@@ -95,7 +91,7 @@ inline void castle_rights::flip()
   std::swap(rights[1], rights[3]);
 }
 
-inline castle_rights castle_rights::castle_flipped() const noexcept
+inline castle_rights castle_rights::flipped() const noexcept
 {
   castle_rights result;
 
@@ -107,10 +103,11 @@ inline castle_rights castle_rights::castle_flipped() const noexcept
 }
 
 inline
-castle_rights::castle_rights(const castle_rights& other, player point_of_view):
+castle_rights::castle_rights(const castle_rights& other,
+                             position_player point_of_view):
   castle_rights(other)
 {
-  if (point_of_view == player::opponent) {
+  if (point_of_view == position_player::opponent) {
     flip();
   }
 }
@@ -137,17 +134,15 @@ inline bool castle_rights::clears_right_opponent_kingside(move move) const
          and (move.from == e8 or move.from == h8);
 }
 
-inline void castle_rights::clear_castle_right(side side)
+inline void castle_rights::clear_side(side side)
 {
   rights[static_cast<unsigned>(side)] = false;
 }
 
 static inline castle_rights::side opponent_of(castle_rights::side side)
 {
-  return static_cast<castle_rights::side>(static_cast<unsigned>(side) ^ 1);
-}
+  return static_cast<castle_rights::side>(static_cast<unsigned>(side) ^ 1); }
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !define(KATOR_CHESS_CASTLE_RIGHTS_H) */

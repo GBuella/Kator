@@ -15,8 +15,6 @@ using ::std::istream;
 
 namespace kator
 {
-namespace chess
-{
 
 const char starting_fen[] =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -40,29 +38,29 @@ public:
     current_index = 0;
   }
 
-  void reset()
+  void reset() override
   {
     reset(std::string(starting_fen));
   }
 
-  void reset(std::string FEN)
+  void reset(std::string FEN) override
   {
     reset(game_state::parse_fen(std::move(FEN)));
   }
 
-  void reset(unique_ptr<game_state> state)
+  void reset(unique_ptr<game_state> state) override
   {
     states.clear();
     states.push_back(std::move(state));
     current_index = 0;
   }
 
-  const game_state& current_state() const noexcept
+  const game_state& current_state() const noexcept override
   {
     return *(states[current_index]);
   }
 
-  void advance(move move)
+  void advance(move move) override
   {
     unique_ptr<game_state> new_state = current_state().make_move(move);
     auto begin = states.begin() + static_cast<ptrdiff_t>(current_index) + 1;
@@ -72,41 +70,41 @@ public:
     ++current_index;
   }
 
-  void advance()
+  void advance() override
   {
     if (not is_at_last_state()) {
       ++current_index;
     }
   }
 
-  bool is_at_last_state() const noexcept
+  bool is_at_last_state() const noexcept override
   {
     return current_index + 1 == states.size();
   }
 
-  bool is_at_first_state() const noexcept
+  bool is_at_first_state() const noexcept override
   {
     return current_index == 0;
   }
 
-  void revert()
+  void revert() override
   {
     if (not is_at_first_state()) {
       --current_index;
     }
   }
 
-  size_t length() const noexcept
+  size_t length() const noexcept override
   {
     return states.size();
   }
 
-  real_player turn() const noexcept
+  real_player turn() const noexcept override
   {
     return current_state().turn;
   }
 
-  const move_list& legal_moves() const noexcept
+  const move_list& legal_moves() const noexcept override
   {
     return current_state().moves;
   }
@@ -131,5 +129,4 @@ unique_ptr<game> game::create(unique_ptr<game_state> state)
   return make_unique<game_implementation>(std::move(state));
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */

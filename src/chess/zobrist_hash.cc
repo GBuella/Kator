@@ -5,9 +5,5 @@
 
 namespace kator
 {
-namespace chess
-{
 
-
-} /* namespace kator::chess */
 } /* namespace kator */

@@ -22,8 +22,8 @@ class search;
 struct result
 {
   unsigned depth;
-  chess::move_list pv;
-  chess::move best_move;
+  move_list pv;
+  move best_move;
   position_value value;
 };
 
@@ -43,7 +43,7 @@ public:
   virtual void set_sub_result_callback(std::function<void(result)>) = 0;
   virtual void set_final_result_callback(std::function<void(result)>) = 0;
   virtual void set_fixed_result_callback(std::function<void(result)>) = 0;
-  virtual void start(std::unique_ptr<chess::game_state> root) = 0;
+  virtual void start(std::unique_ptr<game_state> root) = 0;
   virtual ~engine() {}
 };
 
@@ -53,7 +53,7 @@ struct searh_parameters
   std::function<void(const result&)> final_result_callback;
 };
 
-void start_search(const chess::game_state&, const searh_parameters&);
+void start_search(const game_state&, const searh_parameters&);
 void search_shutdown();
 
 } // namespace kator::engine

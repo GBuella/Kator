@@ -4,8 +4,6 @@
 
 namespace kator
 {
-namespace chess
-{
 
 namespace
 {
@@ -18,24 +16,24 @@ private:
   bitboard nonpinned;
   bool ep_special_pin;
   bitboard dest_mask;
-  const chess::position& position;
+  const kator::position& position;
 
 public:
 
-  move_generator(const chess::position& position_init, move* pm):
+  move_generator(const kator::position& ctor_position, move* pm):
     pmove(pm),
     nonpinned(bitboard::universe()),
-    dest_mask(compl position_init.map_of(player::to_move)),
-    position(position_init)
+    dest_mask(compl ctor_position.map_of(player_to_move)),
+    position(ctor_position)
   { }
 
-  move_generator(const chess::position& position_init,
+  move_generator(const kator::position& ctor_position,
                  move* pm,
                  bitboard victims):
     pmove(pm),
     nonpinned(bitboard::universe()),
     dest_mask(victims),
-    position(position_init)
+    position(ctor_position)
   { }
 
   const move* current_pointer() const
@@ -47,22 +45,24 @@ private:
 
   bitboard occupied() const
   {
-    return position.occupied_map();
+    return position.occupied();
   }
 
-  bitboard map(chess::piece piece) const
+  template<typename type>
+  bitboard map(type item) const
   {
-    return position.map_of(piece);
+    return position.map_of(item);
   }
 
-  bitboard map(piece a, piece b) const
+  template<typename type, typename... types>
+  bitboard map(type arg, types... tail) const
   {
-    return union_of(position.map_of(a), position.map_of(b));
+    return union_of(map(arg), map(tail...));
   }
 
-  bitboard map(chess::player player) const
+  piece piece_at(sq_index index)
   {
-    return position.map_of(player);
+    return position.piece_at(index);
   }
 
   void add_simple_move(sq_index from, sq_index to, piece result)
@@ -71,18 +71,25 @@ private:
   }
 
   void add_simple_move(sq_index from, sq_index to,
-                              piece result, piece captured)
+                       piece result, piece captured)
   {
     *pmove++ = move(from, to, result, captured, move::general);
   }
 
-  void add_promotions(sq_index from, sq_index to,
-                             piece captured = nonpiece)
+  void add_promotions(sq_index from, sq_index to)
   {
-    *pmove++ = move(from, to, queen, captured, move::promotion);
-    *pmove++ = move(from, to, knight, captured, move::promotion);
-    *pmove++ = move(from, to, bishop, captured, move::promotion);
-    *pmove++ = move(from, to, rook, captured, move::promotion);
+    *pmove++ = move(from, to, piece::queen, move::promotion);
+    *pmove++ = move(from, to, piece::knight, move::promotion);
+    *pmove++ = move(from, to, piece::bishop, move::promotion);
+    *pmove++ = move(from, to, piece::rook, move::promotion);
+  }
+
+  void add_promotions(sq_index from, sq_index to, piece captured)
+  {
+    *pmove++ = move(from, to, piece::queen, captured, move::promotion);
+    *pmove++ = move(from, to, piece::knight, captured, move::promotion);
+    *pmove++ = move(from, to, piece::bishop, captured, move::promotion);
+    *pmove++ = move(from, to, piece::rook, captured, move::promotion);
   }
 
   void add_pawn_push(sq_index from, sq_index to)
@@ -91,23 +98,23 @@ private:
       add_promotions(from, to);
     }
     else {
-      add_simple_move(from, to, pawn);
+      add_simple_move(from, to, piece::pawn);
     }
   }
 
   void add_pawn_push_strict(sq_index from, sq_index to)
   {
-    add_simple_move(from, to, pawn);
+    add_simple_move(from, to, piece::pawn);
   }
 
   void add_pawn_push_strict(sq_index from)
   {
-    add_simple_move(from, north_of(from), pawn);
+    add_simple_move(from, north_of(from), piece::pawn);
   }
 
   void add_pawn_double_push(sq_index from, sq_index to)
   {
-    *pmove++ = move(from, to, pawn, move::pawn_double_push);
+    *pmove++ = move(from, to, piece::pawn, move::pawn_double_push);
   }
 
   void add_pawn_double_push(sq_index from)
@@ -117,29 +124,39 @@ private:
 
   void add_pawn_capture(sq_index from, sq_index to)
   {
-    piece captured = position.piece_at(to).basic();
+    piece captured = piece_at(to);
 
     if (to.rank() == rank_8) {
       add_promotions(from, to, captured);
     }
     else {
-      add_simple_move(from, to, pawn, captured);
+      add_simple_move(from, to, piece::pawn, captured);
     }
   }
 
   void add_en_passant(sq_index from)
   {
     *pmove++ = move(from, north_of(position.ep_index()),
-                    pawn, pawn, move::en_passant);
+                    piece::pawn, piece::pawn,
+                    move::en_passant);
   }
 
   void add_general_move(sq_index from, sq_index to, piece result)
   {
-    add_simple_move(from, to, result, position.piece_at(to).basic());
+    add_simple_move(from, to, result, piece_at(to));
   }
 
   void add_general_moves(sq_index from, bitboard to_map, piece result)
   {
+    for (auto to : to_map) {
+      add_general_move(from, to, result);
+    }
+  }
+
+  void add_general_moves(sq_index from, bitboard to_map)
+  {
+    piece result = piece_at(from);
+
     for (auto to : to_map) {
       add_general_move(from, to, result);
     }
@@ -157,8 +174,8 @@ private:
 
   bool is_pin(bitboard ray) const
   {
-    return are_disjoint(ray, map(player::opponent))
-           and intersection_of(ray, map(player::to_move)).is_singular();
+    return are_disjoint(ray, map(player_opponent)) and
+           intersection_of(ray, map(player_to_move)).is_singular();
   }
 
   void handle_pawn_pinned_by_bishop(bitboard ray,
@@ -206,7 +223,7 @@ private:
 
 
   template<bool is_bishop>
-  static bitboard sliders(const chess::position& position)
+  static bitboard sliders(const kator::position& position)
   {
     if (is_bishop) {
       return position.bishop_queen_map();
@@ -223,12 +240,13 @@ private:
     if (position.in_check()) {
       return;
     }
-    sq_index pinned_i = intersection_of(ray, map(player::to_move)).lsb_index();
+    sq_index pinned_i =
+      intersection_of(ray, map(player_to_move)).lsb_index();
 
     if (not are_disjoint(sliders<is_bishop>(position), ray)) {
       ray.set_bit(pinner_i);
       ray.reset_bit(pinned_i);
-      add_general_moves(pinned_i, ray, position.piece_at(pinned_i));
+      add_general_moves(pinned_i, ray);
     }
     else if (not are_disjoint(map(pawn), ray)) {
       handle_pawn_pinned_by<is_bishop>(ray, pinned_i, pinner_i);
@@ -297,7 +315,7 @@ private:
   {
     if (position.can_castle_kingside()
         and position.is_any_unoccupied(f1, g1)
-        and not position.is_any_attacked_by(player::opponent, f1, g1))
+        and not position.is_any_attacked_by(player_opponent, f1, g1))
     {
       add_castle_kingside();
     }
@@ -307,7 +325,7 @@ private:
   {
     if (position.can_castle_queenside()
         and position.is_any_unoccupied(b1, c1, d1)
-        and not position.is_any_attacked_by(player::opponent, c1, d1))
+        and not position.is_any_attacked_by(player_opponent, c1, d1))
     {
       add_castle_queenside();
     }
@@ -323,14 +341,14 @@ private:
   bool can_en_passant_from_left()
   {
     return position.ep_index().file() != file_a
-           and position.piece_at(left_of(position.ep_index())) == pawn
+           and position.map_of(pawn).is_bit_set(left_of(position.ep_index()))
            and nonpinned.is_bit_set(left_of(position.ep_index()));
   }
 
   bool can_en_passant_from_right()
   {
     return position.ep_index().file() != file_h
-           and position.piece_at(right_of(position.ep_index())) == pawn
+           and position.map_of(pawn).is_bit_set(right_of(position.ep_index()))
            and nonpinned.is_bit_set(right_of(position.ep_index()));
   }
 
@@ -352,7 +370,7 @@ private:
       bitboard to_map = bitboard::knight_attacks(from);
 
       to_map.filter_by(dest_mask);
-      add_general_moves(from, to_map, knight);
+      add_general_moves(from, to_map, piece::knight);
     }
   }
 
@@ -376,13 +394,13 @@ private:
     bitboard pawns = intersection_of(map(pawn), nonpinned);
     bitboard attacks = bitboard::pawn_attacks_left(pawns);
 
-    attacks = intersection_of(attacks, map(player::opponent), dest_mask);
+    attacks = intersection_of(attacks, map(player_opponent), dest_mask);
     for (auto to : attacks) {
       add_pawn_capture(right_of(south_of(to)), to);
     }
     attacks = bitboard::pawn_attacks_right(pawns);
-    attacks = intersection_of(attacks, map(player::opponent), dest_mask);
-    for (auto to : intersection_of(attacks, map(player::opponent))) {
+    attacks = intersection_of(attacks, map(player_opponent), dest_mask);
+    for (auto to : intersection_of(attacks, map(player_opponent))) {
       add_pawn_capture(left_of(south_of(to)), to);
     }
   }
@@ -390,34 +408,33 @@ private:
   void gen_sliding_moves(const magic_array& magics, bitboard pieces)
   {
     for (auto from : intersection_of(pieces, nonpinned)) {
-      piece what = position.piece_at(from);
       bitboard to_map = bitboard::sliding_attacks(magics, occupied(), from);
 
-      add_general_moves(from, intersection_of(to_map, dest_mask), what);
+      add_general_moves(from, intersection_of(to_map, dest_mask));
     }
   }
 
   void gen_king_moves()
   {
-    add_general_moves(position.king_index(),
-      intersection_of(
-        bitboard::king_attacks(position.king_index()),
-        compl map(player::to_move),
-        compl position.attacks_of(player::opponent)),
-      king);
+    bitboard to_map = intersection_of(
+                        bitboard::king_attacks(position.king_index()),
+                        compl map(player_to_move),
+                        compl position.attacks_of(player_opponent));
+
+    add_general_moves(position.king_index(), to_map, piece::king);
   }
 
 public:
 
   void run()
   {
-    if (not position.multiple_checkers()) {
+    if (not position.has_multiple_checkers()) {
       ep_special_pin = false;
 
       handle_bishop_pins();
       handle_rook_pins();
       if (position.in_check()) {
-        dest_mask.filter_by(position.get_king_attack_map());
+        dest_mask.filter_by(position.king_attack_map());
       }
       else {
         gen_castle_kingside();
@@ -427,8 +444,8 @@ public:
       gen_knight_moves();
       gen_pawn_pushes();
       gen_pawn_captures();
-      gen_sliding_moves(bitboard::magical::rook, map(rook) | map(queen));
-      gen_sliding_moves(bitboard::magical::bishop, map(bishop) | map(queen));
+      gen_sliding_moves(bitboard::magical::rook, map(rook, queen));
+      gen_sliding_moves(bitboard::magical::bishop, map(bishop, queen));
     }
     gen_king_moves();
   }
@@ -463,7 +480,7 @@ public:
 
 } /* anonym namespace */
 
-move_list::move_list(const position& position) noexcept
+move_list::move_list(const position& position)
 {
   move_generator generator(position, moves);
 
@@ -471,7 +488,7 @@ move_list::move_list(const position& position) noexcept
   size = static_cast<size_t>(generator.current_pointer() - moves);
 }
 
-move_list::move_list(const position& position, bitboard victims) noexcept
+move_list::move_list(const position& position, bitboard victims)
 {
   move_generator generator(position, moves, victims);
 
@@ -523,10 +540,10 @@ void move_list::flip() noexcept
   }
 }
 
-move_list::move_list(const position& position, player whites_view) noexcept:
+move_list::move_list(const position& position, real_player player_to_move):
   move_list(position)
 {
-  if (whites_view == player::opponent) {
+  if (player_to_move == black) {
     flip();
   }
 }
@@ -546,6 +563,5 @@ bool move_list::contains(move move) const noexcept
   return false;
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */
 

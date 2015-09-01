@@ -4,8 +4,6 @@
 
 namespace kator
 {
-namespace chess
-{
 
 template<int max_value>
 class coordinate
@@ -96,7 +94,6 @@ protected:
 
 }; /* template coordinate */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_COORDINATE_H) */

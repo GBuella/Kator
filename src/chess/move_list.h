@@ -11,9 +11,6 @@ namespace engine
 class node;
 }
 
-namespace chess
-{
-
 class move_list
 {
 
@@ -43,9 +40,9 @@ public:
     return moves;
   }
 
-  move_list(const position&) noexcept;
-  move_list(const position&, bitboard capture_targets) noexcept;
-  move_list(const position&, player whites_view) noexcept;
+  move_list(const position&);
+  move_list(const position&, bitboard capture_targets);
+  move_list(const position&, real_player player_to_move);
   size_t count() const noexcept;
   iterator begin() const noexcept;
   iterator end() const noexcept;
@@ -67,7 +64,6 @@ protected:
   friend engine::node;
 }; /* class move_list */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_MOVE_LIST_H) */

@@ -1,7 +1,7 @@
 
 #include "config.h"
 
-#ifdef CAN_DO_SETVBUF
+#ifdef KATOR_CAN_DO_SETVBUF
 #  if defined(CYGWIN) && defined(__STRICT_ANSI__)
 #    undef __STRICT_ANSI__
 #    include <stdio.h>
@@ -21,7 +21,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "platform_low_level.h"
+#include "platform/platform.h"
 #include "chess/chess.h"
 #include "kator.h"
 #include "chess/game.h"
@@ -30,7 +30,7 @@
 #include "engine/engine.h"
 #include "engine/search.h"
 
-#ifdef ANDROID_NDK_PROFILING
+#ifdef KATOR_ANDROID_NDK_PROFILING
 extern "C" void monstartup(const char *);
 extern "C" void moncleanup(void);
 #endif
@@ -50,15 +50,15 @@ static void startup();
 static void onexit();
 [[noreturn]] static void usage(int status);
 static void process_args(char **arg);
-static unique_ptr<kator::book::book> open_initial_book();
+static unique_ptr<kator::book> open_initial_book();
 static kator::conf conf;
 
 static void setup_testing(char**&);
 static bool is_testing_mode = false;
 static string test_path;
-static int test_run(unique_ptr<kator::book::book>,
+static int test_run(unique_ptr<kator::book>,
                     unique_ptr<kator::engine::engine>,
-                    unique_ptr<kator::chess::game>);
+                    unique_ptr<kator::game>);
 
 int main(int, char **argv)
 {
@@ -67,7 +67,7 @@ int main(int, char **argv)
   startup();
   process_args(argv);
   auto initial_book = open_initial_book();
-  auto game = kator::chess::game::create();
+  auto game = kator::game::create();
   auto engine =
     kator::engine::engine::create(kator::engine::search_factory::create());
 
@@ -86,13 +86,13 @@ int main(int, char **argv)
 
 static void startup()
 {
-# ifdef CAN_DO_SETVBUF
+# ifdef KATOR_CAN_DO_SETVBUF
   if (isatty(fileno(stdin))) {
     (void)setvbuf(stdout, NULL, _IOLBF, 0x1000);
   }
 # endif
 
-# ifdef ANDROID_NDK_PROFILING
+# ifdef KATOR_ANDROID_NDK_PROFILING
   monstartup("kator");
 # endif
 
@@ -100,13 +100,13 @@ static void startup()
     exit(EXIT_FAILURE);
   }
 
-  ::kator::chess::bitboard_lookup_tables_init();
+  ::kator::bitboard_lookup_tables_init();
   ::kator::engine::position_value::default_initialize_lookup_tables();
 }
 
 static void onexit()
 {
-#ifdef ANDROID_NDK_PROFILING
+#ifdef KATOR_ANDROID_NDK_PROFILING
   moncleanup();
 #endif
 
@@ -127,11 +127,9 @@ static void setup_timing()
   start_time = new time_point(std::chrono::high_resolution_clock::now());
 }
 
-static void setup_book(char**& arg, kator::book::book_type type)
+static void setup_book(char**& arg, ::kator::book_type type)
 {
-  using namespace kator::book;
-
-  if (arg[1] == nullptr or conf.book_type != book_type::builtin) {
+  if (arg[1] == nullptr or conf.book_type != ::kator::book_type::builtin) {
     usage(EXIT_FAILURE);
   }
   conf.book_type = type;
@@ -141,22 +139,20 @@ static void setup_book(char**& arg, kator::book::book_type type)
 
 static void setup_polyglot_book(char**& arg)
 {
-  setup_book(arg, kator::book::book_type::polyglot);
+  setup_book(arg, kator::book_type::polyglot);
 }
 
 static void setup_fen_book(char**& arg)
 {
-  setup_book(arg, kator::book::book_type::fen);
+  setup_book(arg, kator::book_type::fen);
 }
 
 static void setup_nobook()
 {
-  using namespace kator::book;
-
-  if (conf.book_type != book_type::builtin) {
+  if (conf.book_type != ::kator::book_type::builtin) {
     usage(EXIT_FAILURE);
   }
-  conf.book_type = book_type::empty;
+  conf.book_type = ::kator::book_type::empty;
 }
 
 static void print_version_banner()
@@ -202,53 +198,53 @@ static void print_version_verbose()
        << "\n"
 #endif
        << "Build configuration:\n"
-#ifdef USE_ALIGNAS_64
-       << "USE_ALIGNAS_64\n"
+#ifdef KATOR_USE_ALIGNAS_64
+       << "KATOR_USE_ALIGNAS_64\n"
 #endif
-#ifdef USE_BOARD_VECTOR_64
-       << "USE_BOARD_VECTOR_64\n"
+#ifdef KATOR_USE_BOARD_VECTOR_64
+       << "KATOR_USE_BOARD_VECTOR_64\n"
 #endif
-#ifdef USE_PIECE_MAP_VECTOR
-       << "USE_PIECE_MAP_VECTOR\n"
+#ifdef KATOR_USE_PIECE_MAP_VECTOR
+       << "KATOR_USE_PIECE_MAP_VECTOR\n"
 #endif
-#ifdef USE_PEXT_BITBOARD
-       << "USE_PEXT_BITBOARD\n"
+#ifdef KATOR_USE_PEXT_BITBOARD
+       << "KATOR_USE_PEXT_BITBOARD\n"
 #endif
-#ifdef SYSTEM_POPCNT64
-       << "SYSTEM_POPCNT64\n"
+#ifdef KATOR_SYSTEM_POPCNT64
+       << "KATOR_SYSTEM_POPCNT64\n"
 #endif
-#ifdef SYSTEM_GET_LSB64
-       << "SYSTEM_GET_LSB64\n"
+#ifdef KATOR_SYSTEM_GET_LSB64
+       << "KATOR_SYSTEM_GET_LSB64\n"
 #endif
-#ifdef SYSTEM_RESET_LSB64
-       << "SYSTEM_RESET_LSB64\n"
+#ifdef KATOR_SYSTEM_RESET_LSB64
+       << "KATOR_SYSTEM_RESET_LSB64\n"
 #endif
-#ifdef SYSTEM_BYTESWAP64
-       << "SYSTEM_BYTESWAP64\n"
+#ifdef KATOR_SYSTEM_BYTESWAP64
+       << "KATOR_SYSTEM_BYTESWAP64\n"
 #endif
-#ifdef SYSTEM_CTZ64
-       << "SYSTEM_CTZ64\n"
+#ifdef KATOR_SYSTEM_CTZ64
+       << "KATOR_SYSTEM_CTZ64\n"
 #endif
-#ifdef HAS_INTEL_128BIT_BUILTINS
-       << "INTEL_128BIT_BUILTINS\n"
+#ifdef KATOR_HAS_X64_128BIT_BUILTINS
+       << "KATOR_HAS_X64_128BIT_BUILTINS\n"
 #endif
-#ifdef HAS_INTEL_256BIT_BUILTINS
-       << "INTEL_256BIT_BUILTINS\n"
+#ifdef KATOR_HAS_X64_256BIT_BUILTINS
+       << "KATOR_HAS_X64_256BIT_BUILTINS\n"
 #endif
-#ifdef HAS_INTEL_512BIT_BUILTINS
-       << "INTEL_512BIT_BUILTINS\n"
+#ifdef KATOR_HAS_X64_512BIT_BUILTINS
+       << "KATOR_HAS_X64_512BIT_BUILTINS\n"
 #endif
-#ifdef HAS_BMI2_PEXT_BITBOARD_SUPPORT
-       << "HAS_BMI2_PEXT_BITBOARD_SUPPORT\n"
+#ifdef KATOR_HAS_BMI2_PEXT_BITBOARD_SUPPORT
+       << "KATOR_HAS_BMI2_PEXT_BITBOARD_SUPPORT\n"
 #endif
-#ifdef HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM
-       << "HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM\n"
+#ifdef KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM
+       << "KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_XMM\n"
 #endif
-#ifdef HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM
-       << "HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM\n"
+#ifdef KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM
+       << "KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_YMM\n"
 #endif
-#ifdef HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM
-       << "HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM\n"
+#ifdef KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM
+       << "KATOR_HAS_GCC_GLOBAL_REGISTER_VARIABLE_ZMM\n"
 #endif
        ;
   exit(0);
@@ -283,9 +279,9 @@ static void process_args(char **arg)
   exit(status);
 }
 
-static unique_ptr<kator::book::book> open_initial_book()
+static unique_ptr<kator::book> open_initial_book()
 {
-  using kator::book::book;
+  using kator::book;
 
   unique_ptr<book> initial_book;
 
@@ -343,9 +339,9 @@ static void on_test_run_exit()
   }
 }
 
-static int test_run(unique_ptr<kator::book::book> initial_book,
+static int test_run(unique_ptr<kator::book> initial_book,
                     unique_ptr<kator::engine::engine> engine,
-                    unique_ptr<kator::chess::game> game)
+                    unique_ptr<kator::game> game)
 {
   std::ifstream input;
   std::ifstream expected_out;

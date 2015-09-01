@@ -143,23 +143,23 @@ namespace // helper functions for printing board
     return result;
   }
 
-  string board_left_side(chess::rank rank, bool use_figurines)
+  string board_left_side(rank rank, bool use_figurines)
   {
     string result;
 
-    result = rank.to_str(chess::player::to_move) + " ";
+    result = rank.to_str(player_to_move) + " ";
     if (use_figurines) {
       result += unicode_table::vertical;
     }
     return result;
   }
 
-  string board_right_side(chess::rank rank, bool use_figurines)
+  string board_right_side(rank rank, bool use_figurines)
   {
     string result;
 
-    result = " " + rank.to_str(chess::player::to_move) + "\n";
-    if (use_figurines && rank != chess::rank_1) {
+    result = " " + rank.to_str(player_to_move) + "\n";
+    if (use_figurines && rank != rank_1) {
       result += "  " + unicode_table(8).row_separator() + "\n";
     }
     return result;
@@ -167,15 +167,14 @@ namespace // helper functions for printing board
 
 } // end of anonym namespace - board print helpers
 
-string draw_game_state(const chess::game_state& state, bool use_figurines)
+string draw_game_state(const game_state& state, bool use_figurines)
 {
   string result = upper_border(use_figurines);
 
-  for (auto rank : chess::ranks_8_to_1) {
+  for (auto rank : ranks_8_to_1) {
     result += board_left_side(rank, use_figurines);
-    for (auto file : chess::files_a_to_h) {
-      result += state.piece_at(rank, file).
-                  to_str(state.whites_view, use_figurines);
+    for (auto file : files_a_to_h) {
+      result += state.piece_at(rank, file).to_str(use_figurines);
       if (use_figurines) {
         result += unicode_table::vertical;
       }

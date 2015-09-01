@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "chess.h"
+#include "sq_index.h"
 #include "bitboard.h"
 
 namespace kator
@@ -17,15 +18,12 @@ namespace engine
 class node;
 }
 
-namespace chess
-{
-
 struct move
 {
   sq_index from;
   sq_index to;
 
-  enum move_type_enum {
+  enum move_type_enum : unsigned {
     general = 0,
     pawn_double_push = 1,
     castle_kingside = 2,
@@ -33,7 +31,6 @@ struct move
     en_passant = 4,
     promotion = 5,
   };
-
 
   constexpr bool is_general_move() const;
   constexpr bool is_special_move() const;
@@ -51,41 +48,54 @@ struct move
   constexpr move flipped() const;
 
 
-  unsigned move_type:3;
+  
+  unsigned char move_type:3;
+
+private:
 
   /* The resulting piece on the to square,
      either the piece being moved, or the promotion. */
-  //piece result_piece;
   unsigned char result_piece:5;
 
-  constexpr piece result() const;
+
 
   /* Stored solely for bookkeeping */
-  piece captured_piece;
+  unsigned char captured_piece;
+
+  static constexpr short change_index(unsigned char result_piece,
+                                      unsigned char captured_piece,
+                                      unsigned char move_type);
+
+public:
+
+  constexpr piece result() const;
+  constexpr piece captured() const;
 
   /* for indexing a lookup table */
   constexpr short change_index() const;
   static constexpr short change_index(piece result_piece,
                                       piece captured_piece,
                                       move_type_enum);
+  static constexpr short change_index(piece result_piece,
+                                      move_type_enum);
 
   template<typename T>
   using change_array_t = std::array<T, 0x8000>;
 
-  constexpr move(sq_index ctor_from,
-                 sq_index ctor_to,
-                 piece ctor_piece);
+  explicit constexpr move(sq_index ctor_from,
+                          sq_index ctor_to,
+                          piece ctor_piece);
 
-  constexpr move(sq_index ctor_from,
-                 sq_index ctor_to,
-                 piece ctor_piece,
-                 move_type_enum);
+  explicit constexpr move(sq_index ctor_from,
+                          sq_index ctor_to,
+                          piece ctor_piece,
+                          move_type_enum);
 
-  constexpr move(sq_index ctor_from,
-                 sq_index ctor_to,
-                 piece ctor_piece,
-                 piece ctor_captured,
-                 move_type_enum);
+  explicit constexpr move(sq_index ctor_from,
+                          sq_index ctor_to,
+                          piece ctor_piece,
+                          piece ctor_captured,
+                          move_type_enum);
 
   void flip();
 
@@ -95,13 +105,24 @@ struct move
 
 private:
 
+  explicit constexpr move(sq_index ctor_from,
+                          sq_index ctor_to,
+                          unsigned char ctor_piece,
+                          unsigned char ctor_captured,
+                          unsigned char ctor_move_type);
+
   move();
 
 }; /* class move */
 
 constexpr piece move::result() const
 {
-  return piece(static_cast<piece::piece_index>(result_piece));
+  return static_cast<piece>(result_piece);
+}
+
+constexpr piece move::captured() const
+{
+  return static_cast<piece>(captured_piece);
 }
 
 constexpr move::move(sq_index ctor_from,
@@ -110,8 +131,8 @@ constexpr move::move(sq_index ctor_from,
     from(ctor_from),
     to(ctor_to),
     move_type(general),
-    result_piece(ctor_piece.index()),
-    captured_piece(nonpiece)
+    result_piece(static_cast<decltype(result_piece)>(ctor_piece)),
+    captured_piece(0)
   {}
 
 constexpr move::move(sq_index ctor_from,
@@ -121,8 +142,8 @@ constexpr move::move(sq_index ctor_from,
     from(ctor_from),
     to(ctor_to),
     move_type(ctor_move_type),
-    result_piece(ctor_piece.index()),
-    captured_piece(nonpiece)
+    result_piece(static_cast<decltype(result_piece)>(ctor_piece)),
+    captured_piece(0)
   {}
 
 constexpr move::move(sq_index ctor_from,
@@ -133,8 +154,8 @@ constexpr move::move(sq_index ctor_from,
   from(ctor_from),
   to(ctor_to),
   move_type(ctor_move_type),
-  result_piece(ctor_piece.index()),
-  captured_piece(ctor_captured)
+  result_piece(static_cast<decltype(result_piece)>(ctor_piece)),
+  captured_piece(static_cast<decltype(captured_piece)>(ctor_captured))
 {}
 
 inline void move::flip()
@@ -143,17 +164,28 @@ inline void move::flip()
   to.flip();
 }
 
+constexpr move::move(sq_index ctor_from,
+                     sq_index ctor_to,
+                     unsigned char ctor_piece,
+                     unsigned char ctor_captured,
+                     unsigned char ctor_move_type):
+  from(ctor_from),
+  to(ctor_to),
+  move_type(ctor_move_type),
+  result_piece(ctor_piece),
+  captured_piece(ctor_captured)
+{
+}
+
 constexpr move move::flipped() const
 {
   return move(from.flipped(), to.flipped(),
-              result(), captured_piece, move_type_enum(move_type));
+              result_piece, captured_piece, move_type);
 }
 
 inline move::move():
     from(sq_index::leave::uninitialized),
-    to(sq_index::leave::uninitialized),
-    //result_piece(piece::leave::uninitialized),
-    captured_piece(piece::leave::uninitialized)
+    to(sq_index::leave::uninitialized)
   {}
 
 constexpr bool move::is_general_move() const
@@ -168,7 +200,8 @@ constexpr bool move::is_special_move() const
 
 constexpr bool move::is_pawn_push() const
 {
-  return (result_piece == pawn.index() or is_promotion()) and not is_capture();
+  return ((result_piece == pawn) or is_promotion())
+         and not is_capture();
 }
 
 constexpr bool move::is_double_pawn_push() const
@@ -183,7 +216,7 @@ constexpr bool move::is_en_passant() const
 
 constexpr bool move::is_capture() const
 {
-  return captured_piece.is_set();
+  return captured_piece != 0;
 }
 
 constexpr bool move::is_castle_kingside() const
@@ -203,9 +236,7 @@ constexpr bool move::is_promotion() const
 
 constexpr bool move::is_reversible() const
 {
-  return is_general_move()
-         and not is_capture()
-         and result_piece != pawn.index();
+  return is_general_move() and (not is_capture()) and (result_piece != pawn);
 }
 
 constexpr bool move::is_irreversible() const
@@ -225,34 +256,59 @@ constexpr bool move::operator!= (const move& other) const
   return not (*this == other);
 }
 
+constexpr short move::change_index(unsigned char result_piece,
+                                   unsigned char captured_piece,
+                                   unsigned char move_type)
+{
+  return move_type + (result_piece << 3) + (captured_piece << 8);
+}
+
 constexpr short move::change_index() const
 {
-  return move_type + (result_piece << 3) + (captured_piece.index() << 8);
+  return change_index(move_type, result_piece, captured_piece);
 }
 
 constexpr short move::change_index(piece result_piece,
                                    piece captured_piece,
                                    move::move_type_enum type = move::general)
 {
-  return move(a1, a1, result_piece, captured_piece, type).change_index();
+  return change_index(static_cast<unsigned char>(result_piece),
+	              static_cast<unsigned char>(captured_piece),
+		      type);
 }
+
+constexpr short move::change_index(piece result_piece,
+                                   move::move_type_enum type = move::general)
+{
+  return change_index(static_cast<unsigned char>(result_piece), 0, type);
+}
+
 
 constexpr move move::null()
 {
-  return move(sq_index::null(), sq_index::null(), nonpiece);
+  return move(sq_index::null(), sq_index::null(), 0, 0, 0);
 }
 
 constexpr move null_move = move::null();
 
-constexpr move castle_queenside(e1, c1, king, move::castle_queenside);
-constexpr move castle_kingside(e1, g1, king, move::castle_kingside);
+constexpr move
+castle_queenside(e1, c1, piece::king, move::castle_queenside);
 
-constexpr move white_castle_queenside(e1, c1, king, move::castle_queenside);
-constexpr move white_castle_kingside(e1, g1, king, move::castle_kingside);
-constexpr move black_castle_queenside(e8, c8, king, move::castle_queenside);
-constexpr move black_castle_kingside(e8, g8, king, move::castle_kingside);
+constexpr move
+castle_kingside(e1, g1, piece::king, move::castle_kingside);
 
-} /* namespace kator::chess */
+constexpr move
+white_castle_queenside(e1, c1, piece::king, move::castle_queenside);
+
+constexpr move
+white_castle_kingside(e1, g1, piece::king, move::castle_kingside);
+
+constexpr move
+black_castle_queenside(e8, c8, piece::king, move::castle_queenside);
+
+constexpr move
+black_castle_kingside(e8, g8, piece::king, move::castle_kingside);
+
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_MOVE_H) */

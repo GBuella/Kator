@@ -4,6 +4,7 @@
 #include <memory>
 #include <sstream>
 #include <cstdlib>
+#include <functional>
 
 using ::std::unique_ptr;
 using ::std::make_unique;
@@ -13,15 +14,13 @@ using ::std::istream;
 
 namespace kator
 {
-namespace chess
-{
 
-game_state::game_state(const chess::position& position_arg,
+game_state::game_state(const kator::position& position_arg,
                        unsigned half_moves_arg,
                        unsigned full_moves_arg,
                        real_player real_player_arg,
                        sq_index ep_target):
-  game_state(make_unique<chess::position>(position_arg),
+  game_state(make_unique<kator::position>(position_arg),
              half_moves_arg,
              full_moves_arg,
              real_player_arg,
@@ -29,15 +28,15 @@ game_state::game_state(const chess::position& position_arg,
 {
 }
 
-game_state::game_state(unique_ptr<const chess::position> position_arg,
+game_state::game_state(unique_ptr<const kator::position> position_arg,
                        unsigned half_moves_arg,
                        unsigned full_moves_arg,
                        real_player real_player_arg,
                        sq_index ep_target):
   position(std::move(position_arg)),
   turn(real_player_arg),
-  whites_view((turn == white) ? player::to_move : player::opponent),
-  moves(*position, whites_view),
+  whites_view((turn == white) ? player_to_move : player_opponent),
+  moves(*position, turn),
   has_any_legal_moves(moves.count() != 0),
   half_moves(half_moves_arg),
   full_moves(full_moves_arg),
@@ -99,7 +98,7 @@ SAN_move_from(const game_state* state, sq_index from, sq_index to)
 
 static void mark_check(const game_state* state, string& result, move move)
 {
-  chess::position child(*state->position, move);
+  kator::position child(*state->position, move);
 
   if (child.in_check()) {
     result += "+";
@@ -110,7 +109,7 @@ static void mark_promotion(string& result, move move, bool use_figurines)
 {
   if (move.is_promotion()) {
     result += "=";
-    result += move.result().to_str(player::to_move, use_figurines);
+    result += real_piece(move.result(), white).to_str(use_figurines);
   }
 }
 
@@ -131,9 +130,6 @@ static void mark_capture(string& result, move move)
 static string
 print_algebraic_move(const game_state* state, move move, bool use_figurines)
 {
-  if (state->turn == black) {
-    move.flip();
-  }
   if (move.is_castle_queenside()) {
     return "O-O-O";
   }
@@ -142,15 +138,18 @@ print_algebraic_move(const game_state* state, move move, bool use_figurines)
   }
   else {
     string result;
-    piece actor = state->piece_at(move.from.effective_of(state->whites_view));
+    real_piece actor = state->piece_at(move.from);
 
-    if (actor == pawn) {
+    if (state->turn == black) {
+      move.flip();
+    }
+    if (actor.type == piece::pawn) {
       if (move.is_capture()) {
         result = move.from.file().to_str();
       }
     }
     else {
-      result += actor.to_str(player::to_move, use_figurines);
+      result += actor.to_str(use_figurines);
       result += SAN_move_from(state, move.from, move.to);
     }
     mark_capture(result, move);
@@ -163,8 +162,10 @@ print_algebraic_move(const game_state* state, move move, bool use_figurines)
 }
 
 
-struct fen_parser_implementation
+class fen_parser
 {
+
+private:
 
   static string get_string(istream& stream)
   {
@@ -191,7 +192,7 @@ struct fen_parser_implementation
     }
   }
 
-  void parse_ep_index(std::istream& stream, player point_of_view)
+  void parse_ep_index(std::istream& stream, real_player point_of_view)
   {
     string token = get_string(stream);
 
@@ -205,10 +206,10 @@ struct fen_parser_implementation
     try {
       ep_index = sq_index(token);
 
-      if (point_of_view == player::to_move and ep_index.rank() != rank_6) {
+      if (point_of_view == white and ep_index.rank() != rank_6) {
         throw invalid_fen();
       }
-      if (point_of_view == player::opponent and ep_index.rank() != rank_3) {
+      if (point_of_view == black and ep_index.rank() != rank_3) {
         throw invalid_fen();
       }
     }
@@ -249,41 +250,124 @@ struct fen_parser_implementation
     return parse_uint(arg, min, 256);
   }
 
+  static void verify_spaced_board_layout(const string& spaced_board)
+  {
+    if (spaced_board.size() != 64 + 7) {
+      throw invalid_fen();
+    }
 
-  unique_ptr<chess::position> position;
+    int piece_counter = 0;
+
+    for (auto c : spaced_board) {
+      if (c == '/') {
+        if (piece_counter != 8) {
+          throw invalid_fen();
+        }
+        piece_counter = 0;
+      }
+      else {
+        ++piece_counter;
+      }
+    }
+  }
+
+  string generate_spaced_board(const string& FEN_board)
+  {
+    string result;
+
+    for (auto c : FEN_board) {
+      if (c >= '1' && c <= '8') {
+        while (c --> '0') {
+          result.push_back(' ');
+        }
+      }
+      else if (c == '/' || real_piece::is_valid_char(c)) {
+        result.push_back(c);
+      }
+      else {
+        throw invalid_fen();
+      }
+    }
+    verify_spaced_board_layout(result);
+    return result;
+  }
+
+  static void verify_counts(const unsigned* counts)
+  {
+    unsigned sum = 0, opponent_sum = 0;
+
+    if (counts[white_pawn.offset()] > 8 or
+        counts[black_pawn.offset()] > 8 or
+        counts[white_king.offset()] != 1 or
+        counts[black_king.offset()] != 1)
+    {
+      throw invalid_fen();
+    }
+    for (auto type : all_piece_types()) {
+      sum += counts[real_piece(type, white).offset()];
+      opponent_sum += counts[real_piece(type, black).offset()];
+    }
+    if (sum > 16 || opponent_sum > 16) {
+      throw invalid_fen();
+    }
+  }
+
+  void parse_board(string fen)
+  {
+    string spaced_board = generate_spaced_board(fen);
+    auto c = spaced_board.cbegin();
+    unsigned counts[piece_array_size] = {0};
+
+    for (auto rank : ranks_8_to_1) {
+      for (auto file : files_a_to_h) {
+        if (c == spaced_board.cend()) {
+          throw invalid_fen();
+        }
+        if (*c == ' ') {
+          board[sq_index(rank, file).offset()].is_empty = true;
+        }
+        else {
+          real_piece piece(*c);
+
+          board[sq_index(rank, file).offset()].is_empty = false;
+          board[sq_index(rank, file).offset()].piece = piece;
+
+          if (piece.type == ::kator::piece::pawn && rank.is_any_back_rank()) {
+            throw invalid_fen();
+          }
+          counts[piece.offset()]++;
+        }
+        ++c;
+      }
+      if (c != spaced_board.cend()) {
+        ++c;
+      }
+    }
+    verify_counts(counts);
+  }
+
+public:
+
+  std::array<real_square, 64> board;
   unsigned half_moves;
   unsigned full_moves;
   real_player turn;
   sq_index ep_index = sq_index::none();
+  sq_index pos_ep_index = sq_index::none();
+  unique_ptr<kator::castle_rights> castle;
 
-  fen_parser_implementation(istream& fen)
+  fen_parser(istream& fen)
   {
-    initialize_permanent_vectors();
-    position::piece_board board(get_string(fen));
+    string str_num;
+    parse_board(get_string(fen));
     turn = parse_real_player(fen);
-    castle_rights castle(get_string(fen));
-    player whites_view = (turn == white) ? player::to_move : player::opponent;
-    parse_ep_index(fen, whites_view);
-    try {
-      sq_index pos_ep_index = ep_index;
+    castle = make_unique<castle_rights>(get_string(fen));
+    parse_ep_index(fen, turn);
+    pos_ep_index = ep_index;
 
-      if (ep_index.is_set()) {
-        pos_ep_index = sq_index(rank_5, ep_index.file());
-      }
-      position.reset(new chess::position(board, castle,
-                                         pos_ep_index,
-                                         whites_view));
+    if (ep_index.is_set()) {
+      pos_ep_index = sq_index(rank_5, ep_index.file());
     }
-    catch (const invalid_en_passant_index&) {
-      throw invalid_fen();
-    }
-    catch (const invalid_castle_rights&) {
-      throw invalid_fen();
-    }
-    catch (const invalid_king_positions&) {
-      throw invalid_fen();
-    }
-    string str_board, str_num;
     if (fen >> str_num) {
       half_moves = parse_half_moves(str_num);
       fen >> str_num;
@@ -295,13 +379,55 @@ struct fen_parser_implementation
     }
   }
 
-}; /* struct fen_parser_implementation */
+}; /* class fen_parser */
+
+string
+generate_board_FEN(position_player whites_view,
+                   std::function<square(rank, file)> square_at)
+{
+  std::stringstream result;
+
+  for (auto rank : ranks_8_to_1) {
+    int empty_count = 0;
+
+    for (auto file : files_a_to_h) {
+      kator::rank effective_rank = rank;
+
+      if (whites_view == player_opponent) {
+        effective_rank.flip();
+      }
+      square square = square_at(effective_rank, file);
+      if (square != nonpiece) {
+        if (empty_count > 0) {
+          result << empty_count;
+          empty_count = 0;
+        }
+        result << real_piece(square, whites_view).to_str();
+      }
+      else {
+        ++empty_count;
+      }
+    }
+    if (empty_count > 0) {
+      result << empty_count;
+    }
+    if (rank != rank_1) {
+      result << "/";
+    }
+  }
+  
+  return result.str();
+}
 
 } /* anonymous namespace */
 
 string game_state::to_FEN_no_move_counts() const noexcept
 {
-  string result = position->generate_board_FEN(whites_view);
+  string result = generate_board_FEN(whites_view,
+                  [&](rank rank, file file)
+                  {
+                    return position->square_at(rank, file);
+                  });
 
   result += (turn == white) ? " w " : " b ";
   result += position->generate_castle_FEN(turn);
@@ -366,17 +492,17 @@ move game_state::parse_move(const string& original_move) const
   throw invalid_move_string(original_move);
 }
 
-piece game_state::piece_at(const sq_index& index) const noexcept
+real_piece game_state::piece_at(const sq_index& index) const noexcept
 {
   if (turn == white) {
-    return position->piece_at(index);
+    return real_piece(position->piece_at(index), white);
   }
   else {
-    return position->piece_at(flip(index));
+    return real_piece(position->piece_at(flip(index)), black);
   }
 }
 
-piece game_state::piece_at(const rank& rank, const file& file) const noexcept
+real_piece game_state::piece_at(const rank& rank, const file& file) const noexcept
 {
   return piece_at(sq_index(rank, file));
 }
@@ -397,7 +523,11 @@ string game_state::flipped_to_FEN_no_move_counts() const
   if (not can_flip) {
     throw std::exception();
   }
-  string result = position->generate_board_FEN(opponent_of(whites_view));
+  string result = generate_board_FEN(opponent_of(whites_view),
+                  [&](rank rank, file file)
+                  {
+                    return position->square_at(rank, file);
+                  });
 
   result += (turn == white) ? " b " : " w ";
   result += position->generate_castle_FEN(turn);
@@ -436,7 +566,7 @@ unique_ptr<game_state> game_state::make_move(move move) const
     move.flip();
   }
 
-  chess::position child(*position, move);
+  kator::position child(*position, move);
   unsigned new_full_moves;
   unsigned new_half_moves;
   sq_index ep_target = sq_index::none();
@@ -474,24 +604,34 @@ unique_ptr<game_state> game_state::make_move(move move) const
 unique_ptr<game_state> game_state::parse_fen(string fen_string)
 {
   std::istringstream iss(fen_string);
-  fen_parser_implementation parsed(iss);
-
-  return unique_ptr<game_state>(new game_state(std::move(parsed.position),
-                                               parsed.half_moves,
-                                               parsed.full_moves,
-                                               parsed.turn,
-                                               parsed.ep_index));
+  return parse_fen(iss);
 }
 
 unique_ptr<game_state> game_state::parse_fen(std::istream& fen_stream)
 {
-  fen_parser_implementation parsed(fen_stream);
+  try{
+    unique_ptr<kator::position> position;
+    fen_parser parsed(fen_stream);
 
-  return unique_ptr<game_state>(new game_state(std::move(parsed.position),
-                                               parsed.half_moves,
-                                               parsed.full_moves,
-                                               parsed.turn,
-                                               parsed.ep_index));
+    initialize_permanent_vectors();
+    position.reset(new ::kator::position(parsed.board, *parsed.castle,
+                                         parsed.pos_ep_index, parsed.turn));
+
+    return unique_ptr<game_state>(new game_state(std::move(position),
+                                                 parsed.half_moves,
+                                                 parsed.full_moves,
+                                                 parsed.turn,
+                                                 parsed.ep_index));
+  }
+  catch (const invalid_en_passant_index&) {
+    throw invalid_fen();
+  }
+  catch (const invalid_castle_rights&) {
+    throw invalid_fen();
+  }
+  catch (const invalid_king_positions&) {
+    throw invalid_fen();
+  }
 }
 
 unique_ptr<game_state> parse_fen(string FEN)
@@ -504,6 +644,5 @@ unique_ptr<game_state> parse_fen(std::istream& FEN)
   return game_state::parse_fen(FEN);
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */
 

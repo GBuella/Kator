@@ -8,8 +8,6 @@
 
 namespace kator
 {
-namespace chess
-{
 
 class file: public coordinate<7>
 {
@@ -107,7 +105,6 @@ constexpr file file_h = east_of(file_g);
 
 } /* anonym namespace */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_FILE_H) */

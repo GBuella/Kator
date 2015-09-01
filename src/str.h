@@ -7,7 +7,7 @@
 namespace kator
 {
 
-namespace chess { struct game_state; }
+struct game_state;
 
 namespace str
 {
@@ -22,7 +22,7 @@ extern const char u_alpha[];
 extern const char u_beta[];
 extern const char u_mu[];
 
-std::string draw_game_state(const chess::game_state&, bool use_figurines);
+std::string draw_game_state(const game_state&, bool use_figurines);
 
 class unicode_table
 {

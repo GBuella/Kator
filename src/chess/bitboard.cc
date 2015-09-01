@@ -8,8 +8,6 @@
 
 namespace kator
 {
-namespace chess
-{
   
 namespace
 {
@@ -180,7 +178,7 @@ uint64_t generate_pre_mask(sq_index source,
   return result.to_uint64_t();
 }
 
-#ifdef USE_PEXT_BITBOARD
+#ifdef KATOR_USE_PEXT_BITBOARD
 uint64_t generate_post_mask(sq_index source,
                            const sliding_directions& directions)
 {
@@ -213,7 +211,7 @@ void generate_sliding_attacks(sq_index index,
 {
   std::vector<sliding_attack_t> attacks;
 
-#ifdef USE_PEXT_BITBOARD
+#ifdef KATOR_USE_PEXT_BITBOARD
   attacks.assign(occupancies.size(), 0);
 #else
   attacks.assign(1 << (64 - item.shift), bitboard::empty());
@@ -225,9 +223,10 @@ void generate_sliding_attacks(sq_index index,
     if (offset > max_offset) {
       max_offset = offset;
     }
-#   ifdef USE_PEXT_BITBOARD
+#   ifdef KATOR_USE_PEXT_BITBOARD
       bitboard temp = generate_move_pattern(index, occupied, directions);
-      attacks[offset] = temp.pext(bitboard(item.post_mask));
+      attacks[offset] =
+        static_cast<sliding_attack_t>(temp.pext(bitboard(item.post_mask)));
 #   else
       if (offset >= attacks.size() or attacks[offset].is_nonempty()) {
         throw std::logic_error("invalid magic multiplier");
@@ -254,7 +253,7 @@ void generate_magics(std::array<bitboard::magical, 64>& magics,
     generate_occupancies(index, occupancies, bitboard(item.pre_mask));
     attack_offsets[index.offset()] = sliding_attack_table->size();
 
-#   ifdef USE_PEXT_BITBOARD
+#   ifdef KATOR_USE_PEXT_BITBOARD
       (void)multipliers;
       item.post_mask = generate_post_mask(index, directions);
 #   else
@@ -305,5 +304,4 @@ void bitboard::magical::lookup_tables_init()
   lookup_tables_generated = true;
 }
 
-} /* namespace kator::chess */
 } /* namespace kator */

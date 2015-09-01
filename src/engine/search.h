@@ -10,10 +10,7 @@
 
 namespace kator
 {
-namespace chess
-{
 class position;
-}
 
 namespace engine
 {
@@ -30,8 +27,8 @@ public:
   virtual void reset() = 0;
   virtual void increase_depth() = 0;
   virtual unsigned current_depth() const noexcept = 0;
-  virtual chess::move_list get_pv() const noexcept = 0;
-  virtual position_value get_move_value(chess::move) const = 0;
+  virtual move_list get_pv() const noexcept = 0;
+  virtual position_value get_move_value(move) const = 0;
   //virtual void set_transposition_table(zhash_table&) = 0;
 
   virtual ~search() {}
@@ -41,8 +38,8 @@ public:
 class search_factory
 {
 public:
-  virtual std::unique_ptr<search> create_search(const chess::position&,
-                                                unsigned depth) = 0;
+  virtual std::unique_ptr<search>
+  create_search(const position&, unsigned depth) = 0;
 
   static std::unique_ptr<search_factory> create();
 

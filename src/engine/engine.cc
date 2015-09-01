@@ -33,20 +33,20 @@ class engine_implementation : public engine
   function<void(result)> final_result_callback;
   function<void(result)> fixed_result_callback;
 
-  unique_ptr<chess::game_state> root;
+  unique_ptr<game_state> root;
 
   static constexpr unsigned absolute_max_depth = 128;
 
 public:
 
-  engine_implementation(unique_ptr<search_factory> CTORFactory):
+  engine_implementation(unique_ptr<search_factory> ctor_factory):
     max_depth(0),
     is_search_running(false)
   {
-    if (CTORFactory == nullptr) {
+    if (ctor_factory == nullptr) {
       throw std::exception();
     }
-    factory = std::move(CTORFactory);
+    factory = std::move(ctor_factory);
   }
 
   void set_max_depth(unsigned depth)
@@ -99,7 +99,7 @@ public:
     }
   }
 
-  void start(unique_ptr<chess::game_state> search_root)
+  void start(unique_ptr<game_state> search_root)
   {
     std::lock_guard<std::mutex> guard(mutex);
 

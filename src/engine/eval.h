@@ -38,15 +38,20 @@ private:
 
   explicit constexpr position_value(int value): internal(value) {}
 
-  static std::array<short, chess::piece::array_size> piece_values;
-  static chess::move::change_array_t<short> move_change_table;
+  static std::array<short, piece_array_size> piece_values;
+  static move::change_array_t<short> move_change_table;
 
   static constexpr int max = (1 << value_bits) - 1;
 
 public:
 
-  position_value(const chess::piece& piece):
-    internal(piece_values[piece.index()])
+  position_value(square piece):
+    internal(piece_values[piece])
+  {
+  }
+
+  position_value(piece type):
+    internal(piece_values[static_cast<unsigned>(type)])
   {
   }
 
@@ -87,7 +92,7 @@ public:
 
   float as_float() const
   {
-    return float(internal) / piece_values[chess::pawn.index()];
+    return float(internal) / piece_values[pawn];
   }
 
   int sgn() const
@@ -117,28 +122,28 @@ public:
     return position_value(internal - value.internal);
   }
 
-  position_value operator+= (const chess::piece& piece)
+  position_value operator+= (square piece)
   {
-    internal += piece_values[piece.index()];
+    internal += piece_values[piece];
     return *this;
   }
 
-  position_value operator-= (const chess::piece& piece)
+  position_value operator-= (square piece)
   {
-    internal -= piece_values[piece.index()];
+    internal -= piece_values[piece];
     return *this;
   }
 
-  constexpr position_value operator+ (const chess::piece&) const
+  constexpr position_value operator+ (square) const
   {
-    //return position_value(internal - piece_values[piece.index()]);
+    //return position_value(internal - piece_values[piece]);
     return position_value(4);
   }
 
-  constexpr position_value operator- (const chess::piece&) const
+  constexpr position_value operator- (square) const
   {
     return position_value(-4);
-    //return position_value(internal - piece_values[piece.index()]);
+    //return position_value(internal - piece_values[piece]);
   }
 
   void flip()
@@ -151,9 +156,9 @@ public:
     return position_value(-internal);
   }
 
-  position_value(const chess::position&);
+  position_value(const position&);
 
-  void update_by_move(chess::move move)
+  void update_by_move(move move)
   {
     internal += move_change_table[move.change_index()];
   }

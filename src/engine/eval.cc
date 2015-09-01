@@ -10,8 +10,6 @@
 #include "eval.h"
 #include "chess/position.h"
 
-using namespace ::kator::chess; // should look for a way to get rid of this
-
 using ::std::string;
 
 namespace kator
@@ -20,8 +18,8 @@ namespace kator
 namespace engine
 {
 
-std::array<short, chess::piece::array_size> position_value::piece_values;
-chess::move::change_array_t<short> position_value::move_change_table;
+std::array<short, piece_array_size> position_value::piece_values;
+move::change_array_t<short> position_value::move_change_table;
 
 namespace
 {
@@ -30,47 +28,59 @@ typedef std::map<string, short> conf_t;
 
 #include "default_values.inc"
 
-void setup_piece_values(std::array<short, chess::piece::array_size>& values,
+void setup_piece_values(std::array<short, piece_array_size>& values,
                         const conf_t& conf)
 {
-  values[pawn.index()] =   conf.at("pawn");
-  values[rook.index()] =   conf.at("rook");
-  values[knight.index()] = conf.at("knight");
-  values[bishop.index()] = conf.at("bishop");
-  values[queen.index()] =  conf.at("queen");
-
-  for (auto piece : chess::piece::all_pieces()) {
-    values[chess::opponent_of(piece).index()] = -values[piece.index()];
-  }
+  values[pawn] =   conf.at("pawn");
+  values[rook] =   conf.at("rook");
+  values[knight] = conf.at("knight");
+  values[bishop] = conf.at("bishop");
+  values[queen] =  conf.at("queen");
+  values[opponent_pawn] =   -conf.at("pawn");
+  values[opponent_rook] =   -conf.at("rook");
+  values[opponent_knight] = -conf.at("knight");
+  values[opponent_bishop] = -conf.at("bishop");
+  values[opponent_queen] =  -conf.at("queen");
 }
 
-void add_promotion_values(chess::move::change_array_t<short>& move_change_table,
-                          chess::piece captured)
+template<typename... extra_argument>
+void add_promotion_values(move::change_array_t<short>& move_change_table,
+                          extra_argument... extra)
 {
-  auto promotion = chess::move::promotion;
+  auto entry = [&](piece type) -> short&
+  {
+    auto index = move::change_index(type, extra..., move::promotion);
+    return move_change_table[index];
+  };
 
-  move_change_table[chess::move::change_index(queen, captured, promotion)] =
+  entry(piece::queen) =
                     (position_value(queen) - position_value(pawn)).as_short();
-  move_change_table[chess::move::change_index(rook, captured, promotion)] =
+  entry(piece::rook) =
                     (position_value(rook) - position_value(pawn)).as_short();
-  move_change_table[chess::move::change_index(knight, captured, promotion)] =
+  entry(piece::knight) =
                     (position_value(knight) - position_value(pawn)).as_short();
-  move_change_table[chess::move::change_index(bishop, captured, promotion)] =
+  entry(piece::bishop) =
                     (position_value(bishop) - position_value(pawn)).as_short();
 }
 
-void setup_move_changes(chess::move::change_array_t<short>& move_change_table)
+void setup_move_changes(move::change_array_t<short>& move_change_table)
 {
-  for (auto captured : chess::piece::all_pieces()) {
-    for (auto result : chess::piece::all_pieces()) {
-      move_change_table[chess::move::change_index(result, captured)] =
-                                          position_value(captured).as_short();
+  auto set = [&](position_value value, piece result, piece captured,
+                 move::move_type_enum type)
+  {
+    short short_value = value.as_short();
+
+    move_change_table[move::change_index(result, captured, type)] = short_value;
+  };
+
+  for (auto captured : all_piece_types()) {
+    for (auto result : all_piece_types()) {
+      set(position_value(captured), result, captured, move::general);
     }
     add_promotion_values(move_change_table, captured);
   }
-  add_promotion_values(move_change_table, chess::nonpiece);
-  move_change_table[chess::move::change_index(pawn, pawn, chess::move::en_passant)] =
-                                          position_value(pawn).as_short();
+  add_promotion_values(move_change_table);
+  set(position_value(pawn), piece::pawn, piece::pawn, move::en_passant);
 }
 
 } // anonym namespace
@@ -167,10 +177,10 @@ void position_value::initialize_lookup_tables(std::istream& stream)
   setup_move_changes(move_change_table);
 }
 
-position_value::position_value(const chess::position& position):
+position_value::position_value(const position& position):
   internal(0)
 {
-  for (auto index : chess::sq_index::range()) {
+  for (auto index : sq_index::range()) {
     operator+(position.piece_at(index));
   }
 }

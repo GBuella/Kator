@@ -81,7 +81,7 @@ class hash_entry
     return internal;
   }
 
-  void set_hash_upper(chess::zobrist_hash key)
+  void set_hash_upper(zobrist_hash key)
   {
     internal |= key.get_value() & hash_upper_mask;
   }
@@ -99,12 +99,12 @@ public:
     internal |= value.to_adjusted_uint();
   }
 
-  constexpr bool match(chess::zobrist_hash key) const
+  constexpr bool match(zobrist_hash key) const
   {
     return ((key.get_value() ^ internal) & hash_upper_mask) == UINT64_C(0);
   }
 
-  void set_zobrist_hash(chess::zobrist_hash key)
+  void set_zobrist_hash(zobrist_hash key)
   {
     internal |= key.get_value() & hash_upper_mask;
   }
@@ -174,13 +174,13 @@ public:
   size_t size() const noexcept;
   size_t entry_count() const noexcept;
 
-  hash_entry load_entry(chess::zobrist_hash) const noexcept;
-  hash_entry load_entry(const chess::position&) const noexcept;
-  void store_entry(chess::zobrist_hash, hash_entry) noexcept;
-  void store_entry(const chess::position&, hash_entry) noexcept;
+  hash_entry load_entry(zobrist_hash) const noexcept;
+  hash_entry load_entry(const position&) const noexcept;
+  void store_entry(zobrist_hash, hash_entry) noexcept;
+  void store_entry(const position&, hash_entry) noexcept;
 
-  void prepare_load(chess::zobrist_hash, int locality) const noexcept;
-  void prepare_write(chess::zobrist_hash, int locality) const noexcept;
+  void prepare_load(zobrist_hash, int locality) const noexcept;
+  void prepare_write(zobrist_hash, int locality) const noexcept;
 
 private:
 
@@ -191,7 +191,7 @@ private:
   std::shared_ptr<std::atomic<uint64_t>> data
     = std::shared_ptr<std::atomic<uint64_t>>(nullptr, slot_array_deleter);
 
-  std::atomic<uint64_t>* address_of(chess::zobrist_hash) const noexcept;
+  std::atomic<uint64_t>* address_of(zobrist_hash) const noexcept;
 
 public:
 
@@ -208,13 +208,13 @@ inline void zhash_table::slot_array_deleter(std::atomic<uint64_t>* slots)
 }
 
 inline std::atomic<uint64_t>*
-zhash_table::address_of(chess::zobrist_hash key) const noexcept
+zhash_table::address_of(zobrist_hash key) const noexcept
 {
   return data.get() + static_cast<uintptr_t>(key.get_value() & mask);
 }
 
 inline void
-zhash_table::prepare_load(chess::zobrist_hash key, int locality) const noexcept
+zhash_table::prepare_load(zobrist_hash key, int locality) const noexcept
 {
   switch (locality) {
     case 0:
@@ -233,7 +233,7 @@ zhash_table::prepare_load(chess::zobrist_hash key, int locality) const noexcept
 }
 
 inline void
-zhash_table::prepare_write(chess::zobrist_hash key, int locality) const noexcept
+zhash_table::prepare_write(zobrist_hash key, int locality) const noexcept
 {
   switch (locality) {
     case 0:

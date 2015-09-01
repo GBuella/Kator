@@ -19,11 +19,11 @@ namespace kator
 namespace engine
 {
 
-node::node(const chess::position& ctor_position):
+node::node(const ::kator::position& ctor_position):
   position(ctor_position),
   alpha(negative_infinite),
   beta(positive_infinite),
-  killers({{chess::null_move, chess::null_move, chess::null_move}})
+  killers({{null_move, null_move, null_move}})
 {
 }
 
@@ -32,7 +32,7 @@ namespace
 
 class search_implementation : public search
 {
-  const unique_ptr<const chess::position> root;
+  const unique_ptr<const position> root;
   unsigned max_depth;
   unsigned long node_count;
   std::atomic<bool> is_running;
@@ -47,9 +47,9 @@ class search_implementation : public search
 
 public:
 
-  search_implementation(const chess::position& CTORRoot, unsigned CTORDepth):
-    root(new chess::position(CTORRoot)),
-    max_depth(CTORDepth),
+  search_implementation(const position& ctor_root, unsigned ctor_depth):
+    root(new position(ctor_root)),
+    max_depth(ctor_depth),
     node_count(0),
     is_running(false)
   {
@@ -92,12 +92,12 @@ public:
     return max_depth;
   }
 
-  chess::move_list get_pv() const noexcept
+  move_list get_pv() const noexcept
   {
-    return chess::move_list(*root);
+    return move_list(*root);
   }
 
-  position_value get_move_value(chess::move) const
+  position_value get_move_value(move) const
   {
     return position_value::null_value();
   }
@@ -112,8 +112,7 @@ public:
   {
   }
 
-  unique_ptr<search> create_search(const chess::position& root,
-                                   unsigned depth)
+  unique_ptr<search> create_search(const position& root, unsigned depth)
   {
     return make_unique<search_implementation>(root, depth);
   }

@@ -25,7 +25,7 @@ namespace kator
 {
 
 conf::conf():
-  move_notation(chess::move_notation::SAN),
+  notation(move_notation::SAN),
             /* default move notation for printing move
                it is reset to coordination notation in xboard mode
             */
@@ -52,7 +52,7 @@ conf::conf():
                     - entries always overwritten
             */
 
-  book_type(book::book_type::builtin),
+  book_type(::kator::book_type::builtin),
             /* use the builtin book by default */
 
   use_unicode(false)
@@ -67,8 +67,8 @@ class kator_implementation final : public kator
 
 std::ostream& output;
 std::ostream& output_error;
-unique_ptr<book::book> book;
-unique_ptr<chess::game> game;
+unique_ptr<book> book;
+unique_ptr<typename ::kator::game> game;
 unique_ptr<engine::engine> engine;
 struct conf conf;
 
@@ -76,24 +76,24 @@ std::stringstream* input;
 bool xboard_mode = false;
 bool uci_mode = false;
 bool computer_plays = false;
-chess::real_player computer_side = chess::black;
+real_player computer_side = black;
 std::mutex input_mutex;
 std::mutex output_mutex;
 
 public:
 
-kator_implementation(unique_ptr<book::book> initial_book,
-                     unique_ptr<engine::engine> CTORengine,
-                     unique_ptr<chess::game> CTORgame,
-                     const struct conf& CTORconf,
+kator_implementation(unique_ptr<typename book::book> initial_book,
+                     unique_ptr<engine::engine> ctor_engine,
+                     unique_ptr<typename ::kator::game> ctor_game,
+                     const struct conf& ctor_conf,
                      std::ostream& output_stream,
                      std::ostream& error_stream):
   output(output_stream),
   output_error(error_stream),
   book(std::move(initial_book)),
-  game(std::move(CTORgame)),
-  engine(std::move(CTORengine)),
-  conf(CTORconf)
+  game(std::move(ctor_game)),
+  engine(std::move(ctor_engine)),
+  conf(ctor_conf)
 {
   engine->set_sub_result_callback([&](const engine::result& result)
   {
@@ -123,7 +123,7 @@ unsigned get_uint(unsigned min, unsigned max)
   return str::parse_uint(str_num, min, max);
 }
 
-const chess::game_state& current_state() const
+const game_state& current_state() const
 {
   return game->current_state();
 }
@@ -141,7 +141,6 @@ void cmd_sperft()
   unsigned depth = get_uint(1, 128);
   unsigned long result = slow_perft(current_state(), depth);
 
-  std::lock_guard<std::mutex> output_guard(output_mutex);
   output << result << endl;
 }
 
@@ -162,7 +161,7 @@ void cmd_divide()
   for (auto move : game->legal_moves()) {
     auto child = current_state().make_move(move);
 
-    output << current_state().print_move(move, conf.move_notation)
+    output << current_state().print_move(move, conf.notation)
            << " " << perft(*child, depth - 1) << endl;
   }
 }
@@ -178,7 +177,7 @@ void print_fix_depth_search_final_result(const engine::result& result)
 {
   (void)result;
   std::lock_guard<std::mutex> output_guard(output_mutex);
-  output << current_state().print_move(result.best_move, conf.move_notation)
+  output << current_state().print_move(result.best_move, conf.notation)
          << endl;
   
 }
@@ -186,7 +185,7 @@ void print_fix_depth_search_final_result(const engine::result& result)
 void cmd_search()
 {
   engine->set_max_depth(get_uint(1, 128));
-  engine->start(std::make_unique<chess::game_state>(current_state()));
+  engine->start(std::make_unique<game_state>(current_state()));
 }
 
 void set_xboard()
@@ -232,7 +231,7 @@ void cmd_print_board()
 void cmd_setboard()
 {
   if (!computer_to_move()) {
-    game->reset(chess::game_state::parse_fen(*input));
+    game->reset(game_state::parse_fen(*input));
   }
 }
 
@@ -277,7 +276,7 @@ int dispatch_command(string cmd)
 int dispatch_move(string arg)
 {
   try {
-    chess::move move = current_state().parse_move(arg);
+    move move = current_state().parse_move(arg);
 
     if (!computer_to_move()) {
       game->advance(move);
@@ -329,17 +328,17 @@ void command_loop(std::istream& input_stream)
 
 } /* anonymous namespace */
 
-unique_ptr<kator> kator::create(unique_ptr<book::book> initial_book,
-                                unique_ptr<engine::engine> CTORengine,
-                                unique_ptr<chess::game> CTORgame,
-                                const struct conf& CTORconf,
+unique_ptr<kator> kator::create(unique_ptr<typename book::book> initial_book,
+                                unique_ptr<engine::engine> ctor_engine,
+                                unique_ptr<typename ::kator::game> ctor_game,
+                                const struct conf& ctor_conf,
                                 std::ostream& output_stream,
                                 std::ostream& error_stream)
 {
   return std::make_unique<kator_implementation>(std::move(initial_book),
-                                                std::move(CTORengine),
-                                                std::move(CTORgame),
-                                                CTORconf,
+                                                std::move(ctor_engine),
+                                                std::move(ctor_game),
+                                                ctor_conf,
                                                 output_stream,
                                                 error_stream);
 }

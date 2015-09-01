@@ -12,15 +12,13 @@
 
 namespace kator
 {
-namespace chess
-{
 
 struct game_state
 {
 
-  const std::unique_ptr<const chess::position> position;
+  const std::unique_ptr<const ::kator::position> position;
   const real_player turn;
-  const player whites_view;
+  const position_player whites_view;
   const move_list moves;
   const bool has_any_legal_moves;
   const unsigned half_moves;
@@ -45,21 +43,20 @@ struct game_state
   
   move parse_move(const std::string&) const;
   std::string print_move(move, move_notation) const;
-  piece piece_at(const sq_index&) const noexcept;
-  piece piece_at(const rank&, const file&) const noexcept;
+  real_piece piece_at(const sq_index&) const noexcept;
+  real_piece piece_at(const rank&, const file&) const noexcept;
 
 private:
 
-  game_state(const chess::position&,
+  game_state(const ::kator::position&,
              unsigned half_moves, unsigned full_moves,
              real_player, sq_index ep_target);
-  game_state(std::unique_ptr<const chess::position>,
+  game_state(std::unique_ptr<const ::kator::position>,
              unsigned half_moves, unsigned full_moves,
              real_player, sq_index ep_target);
 
 }; /* class game_state */
 
-} /* namespace kator::chess */
 } /* namespace kator */
 
 #endif /* !defined(KATOR_CHESS_GAME_STATE_H) */
